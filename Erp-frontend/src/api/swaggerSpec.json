@@ -1,0 +1,204 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ECOSCOL ERP API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api-profile/me": {
+      "get": {
+        "tags": ["profile"],
+        "operationId": "getProfile",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api-etudiant/add-Etudiant": {
+      "post": {
+        "tags": ["etudiant"],
+        "operationId": "addEtudiant",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api-paiement/add-Paiement": {
+      "post": {
+        "tags": ["paiement"],
+        "operationId": "addPaiement",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api-note/add-Note": {
+      "post": {
+        "tags": ["note"],
+        "operationId": "addNote",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api-sanction/add-Sanction": {
+      "post": {
+        "tags": ["sanction"],
+        "operationId": "addSanction",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api-classe/getAllClasses": {
+      "get": {
+        "tags": ["classe"],
+        "operationId": "getAllClasses",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api-matiere/getAllMatieres": {
+      "get": {
+        "tags": ["matiere"],
+        "operationId": "getAllMatieres",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api-emploi-du-temps/getAllEmploisDuTemps": {
+      "get": {
+        "tags": ["emploiDuTemps"],
+        "operationId": "getAllEmploisDuTemps",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api-bulletin/getAllBulletins": {
+      "get": {
+        "tags": ["bulletin"],
+        "operationId": "getAllBulletins",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api-evaluation/getAllEvaluations": {
+      "get": {
+        "tags": ["evaluation"],
+        "operationId": "getAllEvaluations",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api-absence/getAllAbsences": {
+      "get": {
+        "tags": ["absence"],
+        "operationId": "getAllAbsences",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api-seance/getAllSeances": {
+      "get": {
+        "tags": ["seance"],
+        "operationId": "getAllSeances",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/api-dashboard/stats": {
+      "get": {
+        "tags": ["dashboard"],
+        "operationId": "getDashboardStats",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "email": { "type": "string" },
+          "role": { "type": "string" }
+        }
+      }
+    }
+  }
+}
