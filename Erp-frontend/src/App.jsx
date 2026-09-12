@@ -17,6 +17,7 @@ import StudentsPage from './pages/StudentsPage';
 import SubjectsPage from './pages/SubjectsPage';
 import TeachersPage from './pages/TeachersPage';
 import Unauthorized from './pages/Unauthorized';
+import UsersPage from './pages/UsersPage';
 
 const AppLayout = () => {
   return (
@@ -127,6 +128,14 @@ const AppLayout = () => {
               element={
                 <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR', 'ROLE_SURVEILLANT']}>
                   <TeachersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR']}>
+                  <UsersPage />
                 </ProtectedRoute>
               }
             />

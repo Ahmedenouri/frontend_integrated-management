@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { to: '/bulletins', label: 'Bulletins', icon: 'bi-file-earmark-text-fill', roles: ['ROLE_DIRECTEUR', 'ROLE_SURVEILLANT', 'ROLE_ETUDIANT'] },
   { to: '/attendance', label: 'Présences', icon: 'bi-calendar-check-fill', roles: ['ROLE_DIRECTEUR', 'ROLE_SURVEILLANT', 'ROLE_PROFESSEUR'] },
   { to: '/teachers', label: 'Professeurs', icon: 'bi-person-badge-fill', roles: ['ROLE_DIRECTEUR', 'ROLE_SURVEILLANT'] },
+  { to: '/users', label: 'Utilisateurs', icon: 'bi-people', roles: ['ROLE_DIRECTEUR'] },
   { to: '/profile', label: 'Profil', icon: 'bi-person-circle', roles: ['ROLE_DIRECTEUR', 'ROLE_RESPONSABLE_FINANCIER', 'ROLE_SURVEILLANT', 'ROLE_PROFESSEUR', 'ROLE_ETUDIANT'] },
 ];
 

@@ -1,0 +1,994 @@
+﻿{
+    "/api-surveillant/add-Surveillant":  {
+                                             "post":  {
+                                                          "tags":  [
+                                                                       "surveillant-controller"
+                                                                   ],
+                                                          "summary":  "Cette opÃ©ration permet d\u0027ajouter un Surveillant dans la base.",
+                                                          "operationId":  "addSurveillant",
+                                                          "requestBody":  {
+                                                                              "content":  {
+                                                                                              "application/json":  {
+                                                                                                                       "schema":  {
+                                                                                                                                      "$ref":  "#/components/schemas/SurveillantRequest"
+                                                                                                                                  }
+                                                                                                                   }
+                                                                                          },
+                                                                              "required":  true
+                                                                          },
+                                                          "responses":  {
+                                                                            "401":  {
+                                                                                        "description":  "L\u0027utilisateur n\u0027est pas authentifiÃ©",
+                                                                                        "content":  {
+                                                                                                        "application/json":  {
+                                                                                                                                 "schema":  {
+                                                                                                                                                "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                            }
+                                                                                                                             }
+                                                                                                    }
+                                                                                    },
+                                                                            "201":  {
+                                                                                        "description":  "L\u0027opÃ©ration d\u0027ajout est effectuÃ©e avec succÃ¨s",
+                                                                                        "content":  {
+                                                                                                        "application/json":  {
+                                                                                                                                 "schema":  {
+                                                                                                                                                "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                            }
+                                                                                                                             }
+                                                                                                    }
+                                                                                    },
+                                                                            "500":  {
+                                                                                        "description":  "Erreur Server !",
+                                                                                        "content":  {
+                                                                                                        "application/json":  {
+                                                                                                                                 "schema":  {
+                                                                                                                                                "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                            }
+                                                                                                                             }
+                                                                                                    }
+                                                                                    },
+                                                                            "403":  {
+                                                                                        "description":  "L\u0027utilisateur n\u0027est pas autorisÃ© Ã  faire l\u0027action demandÃ©e",
+                                                                                        "content":  {
+                                                                                                        "application/json":  {
+                                                                                                                                 "schema":  {
+                                                                                                                                                "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                            }
+                                                                                                                             }
+                                                                                                    }
+                                                                                    },
+                                                                            "400":  {
+                                                                                        "description":  "La requÃªte envoyÃ©e est incorrecte. Bad Request !",
+                                                                                        "content":  {
+                                                                                                        "application/json":  {
+                                                                                                                                 "schema":  {
+                                                                                                                                                "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                            }
+                                                                                                                             }
+                                                                                                    }
+                                                                                    },
+                                                                            "404":  {
+                                                                                        "description":  "La ressource demandÃ©e est introuvable. Not Found !",
+                                                                                        "content":  {
+                                                                                                        "application/json":  {
+                                                                                                                                 "schema":  {
+                                                                                                                                                "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                            }
+                                                                                                                             }
+                                                                                                    }
+                                                                                    }
+                                                                        }
+                                                      }
+                                         },
+    "/api-surveillant/update-Surveillant/{idSurveillant}":  {
+                                                                "patch":  {
+                                                                              "tags":  [
+                                                                                           "surveillant-controller"
+                                                                                       ],
+                                                                              "summary":  "Cette opÃ©ration permet de modifier un Surveillant dans la base.",
+                                                                              "operationId":  "updateSurveillant",
+                                                                              "parameters":  [
+                                                                                                 {
+                                                                                                     "name":  "idSurveillant",
+                                                                                                     "in":  "path",
+                                                                                                     "required":  true,
+                                                                                                     "schema":  {
+                                                                                                                    "type":  "integer",
+                                                                                                                    "format":  "int64"
+                                                                                                                }
+                                                                                                 }
+                                                                                             ],
+                                                                              "requestBody":  {
+                                                                                                  "content":  {
+                                                                                                                  "application/json":  {
+                                                                                                                                           "schema":  {
+                                                                                                                                                          "$ref":  "#/components/schemas/SurveillantRequest"
+                                                                                                                                                      }
+                                                                                                                                       }
+                                                                                                              },
+                                                                                                  "required":  true
+                                                                                              },
+                                                                              "responses":  {
+                                                                                                "401":  {
+                                                                                                            "description":  "L\u0027utilisateur n\u0027est pas authentifiÃ©",
+                                                                                                            "content":  {
+                                                                                                                            "application/json":  {
+                                                                                                                                                     "schema":  {
+                                                                                                                                                                    "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                                                }
+                                                                                                                                                 }
+                                                                                                                        }
+                                                                                                        },
+                                                                                                "200":  {
+                                                                                                            "description":  "L\u0027opÃ©ration est effectuÃ©e avec succÃ¨s",
+                                                                                                            "content":  {
+                                                                                                                            "application/json":  {
+                                                                                                                                                     "schema":  {
+                                                                                                                                                                    "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                                                }
+                                                                                                                                                 }
+                                                                                                                        }
+                                                                                                        },
+                                                                                                "500":  {
+                                                                                                            "description":  "Erreur Server !",
+                                                                                                            "content":  {
+                                                                                                                            "application/json":  {
+                                                                                                                                                     "schema":  {
+                                                                                                                                                                    "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                                                }
+                                                                                                                                                 }
+                                                                                                                        }
+                                                                                                        },
+                                                                                                "403":  {
+                                                                                                            "description":  "L\u0027utilisateur n\u0027est pas autorisÃ© Ã  faire l\u0027action demandÃ©e",
+                                                                                                            "content":  {
+                                                                                                                            "application/json":  {
+                                                                                                                                                     "schema":  {
+                                                                                                                                                                    "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                                                }
+                                                                                                                                                 }
+                                                                                                                        }
+                                                                                                        },
+                                                                                                "400":  {
+                                                                                                            "description":  "La requÃªte envoyÃ©e est incorrecte. Bad Request !",
+                                                                                                            "content":  {
+                                                                                                                            "application/json":  {
+                                                                                                                                                     "schema":  {
+                                                                                                                                                                    "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                                                }
+                                                                                                                                                 }
+                                                                                                                        }
+                                                                                                        },
+                                                                                                "404":  {
+                                                                                                            "description":  "La ressource demandÃ©e est introuvable. Not Found !",
+                                                                                                            "content":  {
+                                                                                                                            "application/json":  {
+                                                                                                                                                     "schema":  {
+                                                                                                                                                                    "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                                                }
+                                                                                                                                                 }
+                                                                                                                        }
+                                                                                                        }
+                                                                                            }
+                                                                          }
+                                                            },
+    "/api-surveillant/delete-Surveillant/{idSurveillant}":  {
+                                                                "delete":  {
+                                                                               "tags":  [
+                                                                                            "surveillant-controller"
+                                                                                        ],
+                                                                               "summary":  "Cette opÃ©ration permet de supprimer un Surveillant dans la base.",
+                                                                               "operationId":  "deleteSurveillant",
+                                                                               "parameters":  [
+                                                                                                  {
+                                                                                                      "name":  "idSurveillant",
+                                                                                                      "in":  "path",
+                                                                                                      "required":  true,
+                                                                                                      "schema":  {
+                                                                                                                     "type":  "integer",
+                                                                                                                     "format":  "int64"
+                                                                                                                 }
+                                                                                                  }
+                                                                                              ],
+                                                                               "responses":  {
+                                                                                                 "401":  {
+                                                                                                             "description":  "L\u0027utilisateur n\u0027est pas authentifiÃ©",
+                                                                                                             "content":  {
+                                                                                                                             "application/json":  {
+                                                                                                                                                      "schema":  {
+                                                                                                                                                                     "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                                                 }
+                                                                                                                                                  }
+                                                                                                                         }
+                                                                                                         },
+                                                                                                 "204":  {
+                                                                                                             "description":  "L\u0027opÃ©ration est effectuÃ©e avec succÃ¨s"
+                                                                                                         },
+                                                                                                 "500":  {
+                                                                                                             "description":  "Erreur Server !",
+                                                                                                             "content":  {
+                                                                                                                             "application/json":  {
+                                                                                                                                                      "schema":  {
+                                                                                                                                                                     "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                                                 }
+                                                                                                                                                  }
+                                                                                                                         }
+                                                                                                         },
+                                                                                                 "403":  {
+                                                                                                             "description":  "L\u0027utilisateur n\u0027est pas autorisÃ© Ã  faire l\u0027action demandÃ©e",
+                                                                                                             "content":  {
+                                                                                                                             "application/json":  {
+                                                                                                                                                      "schema":  {
+                                                                                                                                                                     "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                                                 }
+                                                                                                                                                  }
+                                                                                                                         }
+                                                                                                         },
+                                                                                                 "400":  {
+                                                                                                             "description":  "La requÃªte envoyÃ©e est incorrecte. Bad Request !",
+                                                                                                             "content":  {
+                                                                                                                             "application/json":  {
+                                                                                                                                                      "schema":  {
+                                                                                                                                                                     "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                                                 }
+                                                                                                                                                  }
+                                                                                                                         }
+                                                                                                         },
+                                                                                                 "404":  {
+                                                                                                             "description":  "La ressource demandÃ©e est introuvable. Not Found !",
+                                                                                                             "content":  {
+                                                                                                                             "application/json":  {
+                                                                                                                                                      "schema":  {
+                                                                                                                                                                     "$ref":  "#/components/schemas/SurveillantResponce"
+                                                                                                                                                                 }
+                                                                                                                                                  }
+                                                                                                                         }
+                                                                                                         }
+                                                                                             }
+                                                                           }
+                                                            },
+    "/api-etudiant/update-Etudiant/{idEtudiant}":  {
+                                                       "patch":  {
+                                                                     "tags":  [
+                                                                                  "etudiant-controller"
+                                                                              ],
+                                                                     "summary":  "Cette opÃ©ration permet de modifier une Etudiant dans la base.",
+                                                                     "operationId":  "updateEtudiant",
+                                                                     "parameters":  [
+                                                                                        {
+                                                                                            "name":  "idEtudiant",
+                                                                                            "in":  "path",
+                                                                                            "required":  true,
+                                                                                            "schema":  {
+                                                                                                           "type":  "integer",
+                                                                                                           "format":  "int64"
+                                                                                                       }
+                                                                                        }
+                                                                                    ],
+                                                                     "requestBody":  {
+                                                                                         "content":  {
+                                                                                                         "application/json":  {
+                                                                                                                                  "schema":  {
+                                                                                                                                                 "$ref":  "#/components/schemas/EtudiantRequest"
+                                                                                                                                             }
+                                                                                                                              }
+                                                                                                     },
+                                                                                         "required":  true
+                                                                                     },
+                                                                     "responses":  {
+                                                                                       "404":  {
+                                                                                                   "description":  "La ressource demandÃ©e est introuvable. Not Found !",
+                                                                                                   "content":  {
+                                                                                                                   "application/json":  {
+                                                                                                                                            "schema":  {
+                                                                                                                                                           "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                                       }
+                                                                                                                                        }
+                                                                                                               }
+                                                                                               },
+                                                                                       "200":  {
+                                                                                                   "description":  "L\u0027opÃ©ration est effectuÃ©e avec succÃ¨s",
+                                                                                                   "content":  {
+                                                                                                                   "application/json":  {
+                                                                                                                                            "schema":  {
+                                                                                                                                                           "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                                       }
+                                                                                                                                        }
+                                                                                                               }
+                                                                                               },
+                                                                                       "500":  {
+                                                                                                   "description":  "Erreur Server !",
+                                                                                                   "content":  {
+                                                                                                                   "application/json":  {
+                                                                                                                                            "schema":  {
+                                                                                                                                                           "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                                       }
+                                                                                                                                        }
+                                                                                                               }
+                                                                                               },
+                                                                                       "401":  {
+                                                                                                   "description":  "L\u0027utilisateur n\u0027est pas authentifiÃ©",
+                                                                                                   "content":  {
+                                                                                                                   "application/json":  {
+                                                                                                                                            "schema":  {
+                                                                                                                                                           "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                                       }
+                                                                                                                                        }
+                                                                                                               }
+                                                                                               },
+                                                                                       "400":  {
+                                                                                                   "description":  "La requÃªte envoyÃ©e est incorrecte. Bad Request !",
+                                                                                                   "content":  {
+                                                                                                                   "application/json":  {
+                                                                                                                                            "schema":  {
+                                                                                                                                                           "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                                       }
+                                                                                                                                        }
+                                                                                                               }
+                                                                                               },
+                                                                                       "403":  {
+                                                                                                   "description":  "L\u0027utilisateur n\u0027est pas autorisÃ© Ã  faire l\u0027action demandÃ©e",
+                                                                                                   "content":  {
+                                                                                                                   "application/json":  {
+                                                                                                                                            "schema":  {
+                                                                                                                                                           "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                                       }
+                                                                                                                                        }
+                                                                                                               }
+                                                                                               }
+                                                                                   }
+                                                                 }
+                                                   },
+    "/api-professeur/update-Professeur/{idProfesseur}":  {
+                                                             "patch":  {
+                                                                           "tags":  [
+                                                                                        "professeur-controller"
+                                                                                    ],
+                                                                           "summary":  "Cette opÃ©ration permet de modifier un Professeur dans la base.",
+                                                                           "operationId":  "updateProfesseur",
+                                                                           "parameters":  [
+                                                                                              {
+                                                                                                  "name":  "idProfesseur",
+                                                                                                  "in":  "path",
+                                                                                                  "required":  true,
+                                                                                                  "schema":  {
+                                                                                                                 "type":  "integer",
+                                                                                                                 "format":  "int64"
+                                                                                                             }
+                                                                                              }
+                                                                                          ],
+                                                                           "requestBody":  {
+                                                                                               "content":  {
+                                                                                                               "application/json":  {
+                                                                                                                                        "schema":  {
+                                                                                                                                                       "$ref":  "#/components/schemas/ProfesseurRequest"
+                                                                                                                                                   }
+                                                                                                                                    }
+                                                                                                           },
+                                                                                               "required":  true
+                                                                                           },
+                                                                           "responses":  {
+                                                                                             "404":  {
+                                                                                                         "description":  "La ressource demandÃ©e est introuvable. Not Found !",
+                                                                                                         "content":  {
+                                                                                                                         "application/json":  {
+                                                                                                                                                  "schema":  {
+                                                                                                                                                                 "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                                             }
+                                                                                                                                              }
+                                                                                                                     }
+                                                                                                     },
+                                                                                             "400":  {
+                                                                                                         "description":  "La requÃªte envoyÃ©e est incorrecte. Bad Request !",
+                                                                                                         "content":  {
+                                                                                                                         "application/json":  {
+                                                                                                                                                  "schema":  {
+                                                                                                                                                                 "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                                             }
+                                                                                                                                              }
+                                                                                                                     }
+                                                                                                     },
+                                                                                             "200":  {
+                                                                                                         "description":  "L\u0027opÃ©ration est effectuÃ©e avec succÃ¨s",
+                                                                                                         "content":  {
+                                                                                                                         "application/json":  {
+                                                                                                                                                  "schema":  {
+                                                                                                                                                                 "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                                             }
+                                                                                                                                              }
+                                                                                                                     }
+                                                                                                     },
+                                                                                             "500":  {
+                                                                                                         "description":  "Erreur Server !",
+                                                                                                         "content":  {
+                                                                                                                         "application/json":  {
+                                                                                                                                                  "schema":  {
+                                                                                                                                                                 "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                                             }
+                                                                                                                                              }
+                                                                                                                     }
+                                                                                                     },
+                                                                                             "401":  {
+                                                                                                         "description":  "L\u0027utilisateur n\u0027est pas authentifiÃ©",
+                                                                                                         "content":  {
+                                                                                                                         "application/json":  {
+                                                                                                                                                  "schema":  {
+                                                                                                                                                                 "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                                             }
+                                                                                                                                              }
+                                                                                                                     }
+                                                                                                     },
+                                                                                             "403":  {
+                                                                                                         "description":  "L\u0027utilisateur n\u0027est pas autorisÃ© Ã  faire l\u0027action demandÃ©e",
+                                                                                                         "content":  {
+                                                                                                                         "application/json":  {
+                                                                                                                                                  "schema":  {
+                                                                                                                                                                 "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                                             }
+                                                                                                                                              }
+                                                                                                                     }
+                                                                                                     }
+                                                                                         }
+                                                                       }
+                                                         },
+    "/api-etudiant/delete-Etudiant/{idEtudiant}":  {
+                                                       "delete":  {
+                                                                      "tags":  [
+                                                                                   "etudiant-controller"
+                                                                               ],
+                                                                      "summary":  "Cette opÃ©ration permet de supprimer un Etudiant dans la base.",
+                                                                      "operationId":  "deleteEtudiant",
+                                                                      "parameters":  [
+                                                                                         {
+                                                                                             "name":  "idEtudiant",
+                                                                                             "in":  "path",
+                                                                                             "required":  true,
+                                                                                             "schema":  {
+                                                                                                            "type":  "integer",
+                                                                                                            "format":  "int64"
+                                                                                                        }
+                                                                                         }
+                                                                                     ],
+                                                                      "responses":  {
+                                                                                        "204":  {
+                                                                                                    "description":  "L\u0027opÃ©ration est effectuÃ©e avec succÃ¨s"
+                                                                                                },
+                                                                                        "404":  {
+                                                                                                    "description":  "La ressource demandÃ©e est introuvable. Not Found !",
+                                                                                                    "content":  {
+                                                                                                                    "application/json":  {
+                                                                                                                                             "schema":  {
+                                                                                                                                                            "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                                        }
+                                                                                                                                         }
+                                                                                                                }
+                                                                                                },
+                                                                                        "500":  {
+                                                                                                    "description":  "Erreur Server !",
+                                                                                                    "content":  {
+                                                                                                                    "application/json":  {
+                                                                                                                                             "schema":  {
+                                                                                                                                                            "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                                        }
+                                                                                                                                         }
+                                                                                                                }
+                                                                                                },
+                                                                                        "401":  {
+                                                                                                    "description":  "L\u0027utilisateur n\u0027est pas authentifiÃ©",
+                                                                                                    "content":  {
+                                                                                                                    "application/json":  {
+                                                                                                                                             "schema":  {
+                                                                                                                                                            "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                                        }
+                                                                                                                                         }
+                                                                                                                }
+                                                                                                },
+                                                                                        "400":  {
+                                                                                                    "description":  "La requÃªte envoyÃ©e est incorrecte. Bad Request !",
+                                                                                                    "content":  {
+                                                                                                                    "application/json":  {
+                                                                                                                                             "schema":  {
+                                                                                                                                                            "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                                        }
+                                                                                                                                         }
+                                                                                                                }
+                                                                                                },
+                                                                                        "403":  {
+                                                                                                    "description":  "L\u0027utilisateur n\u0027est pas autorisÃ© Ã  faire l\u0027action demandÃ©e",
+                                                                                                    "content":  {
+                                                                                                                    "application/json":  {
+                                                                                                                                             "schema":  {
+                                                                                                                                                            "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                                        }
+                                                                                                                                         }
+                                                                                                                }
+                                                                                                }
+                                                                                    }
+                                                                  }
+                                                   },
+    "/api-professeur/delete-Professeur/{idProfesseur}":  {
+                                                             "delete":  {
+                                                                            "tags":  [
+                                                                                         "professeur-controller"
+                                                                                     ],
+                                                                            "summary":  "Cette opÃ©ration permet de supprimer un Professeur dans la base.",
+                                                                            "operationId":  "deleteProfesseur",
+                                                                            "parameters":  [
+                                                                                               {
+                                                                                                   "name":  "idProfesseur",
+                                                                                                   "in":  "path",
+                                                                                                   "required":  true,
+                                                                                                   "schema":  {
+                                                                                                                  "type":  "integer",
+                                                                                                                  "format":  "int64"
+                                                                                                              }
+                                                                                               }
+                                                                                           ],
+                                                                            "responses":  {
+                                                                                              "404":  {
+                                                                                                          "description":  "La ressource demandÃ©e est introuvable. Not Found !",
+                                                                                                          "content":  {
+                                                                                                                          "application/json":  {
+                                                                                                                                                   "schema":  {
+                                                                                                                                                                  "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                                              }
+                                                                                                                                               }
+                                                                                                                      }
+                                                                                                      },
+                                                                                              "400":  {
+                                                                                                          "description":  "La requÃªte envoyÃ©e est incorrecte. Bad Request !",
+                                                                                                          "content":  {
+                                                                                                                          "application/json":  {
+                                                                                                                                                   "schema":  {
+                                                                                                                                                                  "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                                              }
+                                                                                                                                               }
+                                                                                                                      }
+                                                                                                      },
+                                                                                              "204":  {
+                                                                                                          "description":  "L\u0027opÃ©ration est effectuÃ©e avec succÃ¨s"
+                                                                                                      },
+                                                                                              "500":  {
+                                                                                                          "description":  "Erreur Server !",
+                                                                                                          "content":  {
+                                                                                                                          "application/json":  {
+                                                                                                                                                   "schema":  {
+                                                                                                                                                                  "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                                              }
+                                                                                                                                               }
+                                                                                                                      }
+                                                                                                      },
+                                                                                              "401":  {
+                                                                                                          "description":  "L\u0027utilisateur n\u0027est pas authentifiÃ©",
+                                                                                                          "content":  {
+                                                                                                                          "application/json":  {
+                                                                                                                                                   "schema":  {
+                                                                                                                                                                  "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                                              }
+                                                                                                                                               }
+                                                                                                                      }
+                                                                                                      },
+                                                                                              "403":  {
+                                                                                                          "description":  "L\u0027utilisateur n\u0027est pas autorisÃ© Ã  faire l\u0027action demandÃ©e",
+                                                                                                          "content":  {
+                                                                                                                          "application/json":  {
+                                                                                                                                                   "schema":  {
+                                                                                                                                                                  "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                                              }
+                                                                                                                                               }
+                                                                                                                      }
+                                                                                                      }
+                                                                                          }
+                                                                        }
+                                                         },
+    "/api-directeur/update-Directeur/{idDirecteur}":  {
+                                                          "patch":  {
+                                                                        "tags":  [
+                                                                                     "directeur-controller"
+                                                                                 ],
+                                                                        "summary":  "Cette opÃ©ration permet de modifier un Directeur dans la base.",
+                                                                        "operationId":  "updateDirecteur",
+                                                                        "parameters":  [
+                                                                                           {
+                                                                                               "name":  "idDirecteur",
+                                                                                               "in":  "path",
+                                                                                               "required":  true,
+                                                                                               "schema":  {
+                                                                                                              "type":  "integer",
+                                                                                                              "format":  "int64"
+                                                                                                          }
+                                                                                           }
+                                                                                       ],
+                                                                        "requestBody":  {
+                                                                                            "content":  {
+                                                                                                            "application/json":  {
+                                                                                                                                     "schema":  {
+                                                                                                                                                    "$ref":  "#/components/schemas/DirecteurRequest"
+                                                                                                                                                }
+                                                                                                                                 }
+                                                                                                        },
+                                                                                            "required":  true
+                                                                                        },
+                                                                        "responses":  {
+                                                                                          "200":  {
+                                                                                                      "description":  "L\u0027opÃ©ration est effectuÃ©e avec succÃ¨s",
+                                                                                                      "content":  {
+                                                                                                                      "application/json":  {
+                                                                                                                                               "schema":  {
+                                                                                                                                                              "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                                          }
+                                                                                                                                           }
+                                                                                                                  }
+                                                                                                  },
+                                                                                          "401":  {
+                                                                                                      "description":  "L\u0027utilisateur n\u0027est pas authentifiÃ©",
+                                                                                                      "content":  {
+                                                                                                                      "application/json":  {
+                                                                                                                                               "schema":  {
+                                                                                                                                                              "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                                          }
+                                                                                                                                           }
+                                                                                                                  }
+                                                                                                  },
+                                                                                          "400":  {
+                                                                                                      "description":  "La requÃªte envoyÃ©e est incorrecte. Bad Request !",
+                                                                                                      "content":  {
+                                                                                                                      "application/json":  {
+                                                                                                                                               "schema":  {
+                                                                                                                                                              "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                                          }
+                                                                                                                                           }
+                                                                                                                  }
+                                                                                                  },
+                                                                                          "404":  {
+                                                                                                      "description":  "La ressource demandÃ©e est introuvable. Not Found !",
+                                                                                                      "content":  {
+                                                                                                                      "application/json":  {
+                                                                                                                                               "schema":  {
+                                                                                                                                                              "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                                          }
+                                                                                                                                           }
+                                                                                                                  }
+                                                                                                  },
+                                                                                          "500":  {
+                                                                                                      "description":  "Erreur Server !",
+                                                                                                      "content":  {
+                                                                                                                      "application/json":  {
+                                                                                                                                               "schema":  {
+                                                                                                                                                              "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                                          }
+                                                                                                                                           }
+                                                                                                                  }
+                                                                                                  },
+                                                                                          "403":  {
+                                                                                                      "description":  "L\u0027utilisateur n\u0027est pas autorisÃ© Ã  faire l\u0027action demandÃ©e",
+                                                                                                      "content":  {
+                                                                                                                      "application/json":  {
+                                                                                                                                               "schema":  {
+                                                                                                                                                              "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                                          }
+                                                                                                                                           }
+                                                                                                                  }
+                                                                                                  }
+                                                                                      }
+                                                                    }
+                                                      },
+    "/api-directeur/add-Directeur":  {
+                                         "post":  {
+                                                      "tags":  [
+                                                                   "directeur-controller"
+                                                               ],
+                                                      "summary":  "Cette opÃ©ration permet d\u0027ajouter un Directeur dans la base.",
+                                                      "operationId":  "addDirecteur",
+                                                      "requestBody":  {
+                                                                          "content":  {
+                                                                                          "application/json":  {
+                                                                                                                   "schema":  {
+                                                                                                                                  "$ref":  "#/components/schemas/DirecteurRequest"
+                                                                                                                              }
+                                                                                                               }
+                                                                                      },
+                                                                          "required":  true
+                                                                      },
+                                                      "responses":  {
+                                                                        "401":  {
+                                                                                    "description":  "L\u0027utilisateur n\u0027est pas authentifiÃ©",
+                                                                                    "content":  {
+                                                                                                    "application/json":  {
+                                                                                                                             "schema":  {
+                                                                                                                                            "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                        }
+                                                                                                                         }
+                                                                                                }
+                                                                                },
+                                                                        "400":  {
+                                                                                    "description":  "La requÃªte envoyÃ©e est incorrecte. Bad Request !",
+                                                                                    "content":  {
+                                                                                                    "application/json":  {
+                                                                                                                             "schema":  {
+                                                                                                                                            "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                        }
+                                                                                                                         }
+                                                                                                }
+                                                                                },
+                                                                        "404":  {
+                                                                                    "description":  "La ressource demandÃ©e est introuvable. Not Found !",
+                                                                                    "content":  {
+                                                                                                    "application/json":  {
+                                                                                                                             "schema":  {
+                                                                                                                                            "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                        }
+                                                                                                                         }
+                                                                                                }
+                                                                                },
+                                                                        "201":  {
+                                                                                    "description":  "L\u0027opÃ©ration d\u0027ajout est effectuÃ©e avec succÃ¨s",
+                                                                                    "content":  {
+                                                                                                    "application/json":  {
+                                                                                                                             "schema":  {
+                                                                                                                                            "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                        }
+                                                                                                                         }
+                                                                                                }
+                                                                                },
+                                                                        "500":  {
+                                                                                    "description":  "Erreur Server !",
+                                                                                    "content":  {
+                                                                                                    "application/json":  {
+                                                                                                                             "schema":  {
+                                                                                                                                            "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                        }
+                                                                                                                         }
+                                                                                                }
+                                                                                },
+                                                                        "403":  {
+                                                                                    "description":  "L\u0027utilisateur n\u0027est pas autorisÃ© Ã  faire l\u0027action demandÃ©e",
+                                                                                    "content":  {
+                                                                                                    "application/json":  {
+                                                                                                                             "schema":  {
+                                                                                                                                            "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                        }
+                                                                                                                         }
+                                                                                                }
+                                                                                }
+                                                                    }
+                                                  }
+                                     },
+    "/api-directeur/delete-Directeur/{idDirecteur}":  {
+                                                          "delete":  {
+                                                                         "tags":  [
+                                                                                      "directeur-controller"
+                                                                                  ],
+                                                                         "summary":  "Cette opÃ©ration permet de supprimer un Directeur dans la base.",
+                                                                         "operationId":  "deleteDirecteur",
+                                                                         "parameters":  [
+                                                                                            {
+                                                                                                "name":  "idDirecteur",
+                                                                                                "in":  "path",
+                                                                                                "required":  true,
+                                                                                                "schema":  {
+                                                                                                               "type":  "integer",
+                                                                                                               "format":  "int64"
+                                                                                                           }
+                                                                                            }
+                                                                                        ],
+                                                                         "responses":  {
+                                                                                           "204":  {
+                                                                                                       "description":  "L\u0027opÃ©ration est effectuÃ©e avec succÃ¨s"
+                                                                                                   },
+                                                                                           "401":  {
+                                                                                                       "description":  "L\u0027utilisateur n\u0027est pas authentifiÃ©",
+                                                                                                       "content":  {
+                                                                                                                       "application/json":  {
+                                                                                                                                                "schema":  {
+                                                                                                                                                               "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                                           }
+                                                                                                                                            }
+                                                                                                                   }
+                                                                                                   },
+                                                                                           "400":  {
+                                                                                                       "description":  "La requÃªte envoyÃ©e est incorrecte. Bad Request !",
+                                                                                                       "content":  {
+                                                                                                                       "application/json":  {
+                                                                                                                                                "schema":  {
+                                                                                                                                                               "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                                           }
+                                                                                                                                            }
+                                                                                                                   }
+                                                                                                   },
+                                                                                           "404":  {
+                                                                                                       "description":  "La ressource demandÃ©e est introuvable. Not Found !",
+                                                                                                       "content":  {
+                                                                                                                       "application/json":  {
+                                                                                                                                                "schema":  {
+                                                                                                                                                               "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                                           }
+                                                                                                                                            }
+                                                                                                                   }
+                                                                                                   },
+                                                                                           "500":  {
+                                                                                                       "description":  "Erreur Server !",
+                                                                                                       "content":  {
+                                                                                                                       "application/json":  {
+                                                                                                                                                "schema":  {
+                                                                                                                                                               "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                                           }
+                                                                                                                                            }
+                                                                                                                   }
+                                                                                                   },
+                                                                                           "403":  {
+                                                                                                       "description":  "L\u0027utilisateur n\u0027est pas autorisÃ© Ã  faire l\u0027action demandÃ©e",
+                                                                                                       "content":  {
+                                                                                                                       "application/json":  {
+                                                                                                                                                "schema":  {
+                                                                                                                                                               "$ref":  "#/components/schemas/DirecteurResponce"
+                                                                                                                                                           }
+                                                                                                                                            }
+                                                                                                                   }
+                                                                                                   }
+                                                                                       }
+                                                                     }
+                                                      },
+    "/api-professeur/add-Professeur":  {
+                                           "post":  {
+                                                        "tags":  [
+                                                                     "professeur-controller"
+                                                                 ],
+                                                        "summary":  "Cette opÃ©ration permet d\u0027ajouter un Professeur dans la base.",
+                                                        "operationId":  "addProfesseur",
+                                                        "requestBody":  {
+                                                                            "content":  {
+                                                                                            "application/json":  {
+                                                                                                                     "schema":  {
+                                                                                                                                    "$ref":  "#/components/schemas/ProfesseurRequest"
+                                                                                                                                }
+                                                                                                                 }
+                                                                                        },
+                                                                            "required":  true
+                                                                        },
+                                                        "responses":  {
+                                                                          "404":  {
+                                                                                      "description":  "La ressource demandÃ©e est introuvable. Not Found !",
+                                                                                      "content":  {
+                                                                                                      "application/json":  {
+                                                                                                                               "schema":  {
+                                                                                                                                              "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                          }
+                                                                                                                           }
+                                                                                                  }
+                                                                                  },
+                                                                          "400":  {
+                                                                                      "description":  "La requÃªte envoyÃ©e est incorrecte. Bad Request !",
+                                                                                      "content":  {
+                                                                                                      "application/json":  {
+                                                                                                                               "schema":  {
+                                                                                                                                              "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                          }
+                                                                                                                           }
+                                                                                                  }
+                                                                                  },
+                                                                          "500":  {
+                                                                                      "description":  "Erreur Server !",
+                                                                                      "content":  {
+                                                                                                      "application/json":  {
+                                                                                                                               "schema":  {
+                                                                                                                                              "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                          }
+                                                                                                                           }
+                                                                                                  }
+                                                                                  },
+                                                                          "401":  {
+                                                                                      "description":  "L\u0027utilisateur n\u0027est pas authentifiÃ©",
+                                                                                      "content":  {
+                                                                                                      "application/json":  {
+                                                                                                                               "schema":  {
+                                                                                                                                              "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                          }
+                                                                                                                           }
+                                                                                                  }
+                                                                                  },
+                                                                          "201":  {
+                                                                                      "description":  "L\u0027opÃ©ration d\u0027ajout est effectuÃ©e avec succÃ¨s",
+                                                                                      "content":  {
+                                                                                                      "application/json":  {
+                                                                                                                               "schema":  {
+                                                                                                                                              "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                          }
+                                                                                                                           }
+                                                                                                  }
+                                                                                  },
+                                                                          "403":  {
+                                                                                      "description":  "L\u0027utilisateur n\u0027est pas autorisÃ© Ã  faire l\u0027action demandÃ©e",
+                                                                                      "content":  {
+                                                                                                      "application/json":  {
+                                                                                                                               "schema":  {
+                                                                                                                                              "$ref":  "#/components/schemas/ProfesseurResponce"
+                                                                                                                                          }
+                                                                                                                           }
+                                                                                                  }
+                                                                                  }
+                                                                      }
+                                                    }
+                                       },
+    "/api-etudiant/add-Etudiant":  {
+                                       "post":  {
+                                                    "tags":  [
+                                                                 "etudiant-controller"
+                                                             ],
+                                                    "summary":  "Cette opÃ©ration permet d\u0027ajouter un Etudiant dans la base.",
+                                                    "operationId":  "addEtudiant",
+                                                    "requestBody":  {
+                                                                        "content":  {
+                                                                                        "application/json":  {
+                                                                                                                 "schema":  {
+                                                                                                                                "$ref":  "#/components/schemas/EtudiantRequest"
+                                                                                                                            }
+                                                                                                             }
+                                                                                    },
+                                                                        "required":  true
+                                                                    },
+                                                    "responses":  {
+                                                                      "201":  {
+                                                                                  "description":  "L\u0027opÃ©ration d\u0027ajout est effectuÃ©e avec succÃ¨s",
+                                                                                  "content":  {
+                                                                                                  "application/json":  {
+                                                                                                                           "schema":  {
+                                                                                                                                          "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                      }
+                                                                                                                       }
+                                                                                              }
+                                                                              },
+                                                                      "404":  {
+                                                                                  "description":  "La ressource demandÃ©e est introuvable. Not Found !",
+                                                                                  "content":  {
+                                                                                                  "application/json":  {
+                                                                                                                           "schema":  {
+                                                                                                                                          "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                      }
+                                                                                                                       }
+                                                                                              }
+                                                                              },
+                                                                      "500":  {
+                                                                                  "description":  "Erreur Server !",
+                                                                                  "content":  {
+                                                                                                  "application/json":  {
+                                                                                                                           "schema":  {
+                                                                                                                                          "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                      }
+                                                                                                                       }
+                                                                                              }
+                                                                              },
+                                                                      "401":  {
+                                                                                  "description":  "L\u0027utilisateur n\u0027est pas authentifiÃ©",
+                                                                                  "content":  {
+                                                                                                  "application/json":  {
+                                                                                                                           "schema":  {
+                                                                                                                                          "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                      }
+                                                                                                                       }
+                                                                                              }
+                                                                              },
+                                                                      "400":  {
+                                                                                  "description":  "La requÃªte envoyÃ©e est incorrecte. Bad Request !",
+                                                                                  "content":  {
+                                                                                                  "application/json":  {
+                                                                                                                           "schema":  {
+                                                                                                                                          "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                      }
+                                                                                                                       }
+                                                                                              }
+                                                                              },
+                                                                      "403":  {
+                                                                                  "description":  "L\u0027utilisateur n\u0027est pas autorisÃ© Ã  faire l\u0027action demandÃ©e",
+                                                                                  "content":  {
+                                                                                                  "application/json":  {
+                                                                                                                           "schema":  {
+                                                                                                                                          "$ref":  "#/components/schemas/EtudiantResponce"
+                                                                                                                                      }
+                                                                                                                       }
+                                                                                              }
+                                                                              }
+                                                                  }
+                                                }
+                                   }
+}

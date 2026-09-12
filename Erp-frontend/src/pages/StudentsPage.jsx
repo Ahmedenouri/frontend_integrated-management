@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createStudent, deleteStudent, getAllStudents, updateStudent } from '../api/erpApi';
+import { createStudent, deleteStudent, getAllStudents, getStudentById, updateStudent } from '../api/erpApi';
 import DataTable from '../components/DataTable';
 
 const initialForm = {
@@ -9,9 +9,30 @@ const initialForm = {
   telephone: '',
   motDePasse: '',
   cne: '',
+  dateNaissance: '',
+  nomParent: '',
+  telephoneParent: '',
+  emailParent: '',
+  classeId: '',
   role: 'ETUDIANT',
   estActif: true,
 };
+
+const buildStudentFormValues = (student = {}) => ({
+  nom: student.nom || '',
+  prenom: student.prenom || '',
+  email: student.email || '',
+  telephone: student.telephone || '',
+  motDePasse: '',
+  cne: student.cne || '',
+  dateNaissance: student.dateNaissance || '',
+  nomParent: student.nomParent || '',
+  telephoneParent: student.telephoneParent || '',
+  emailParent: student.emailParent || '',
+  classeId: student.classeId ?? '',
+  role: student.role || 'ETUDIANT',
+  estActif: Boolean(student.estActif),
+});
 
 const StudentsPage = () => {
   const [students, setStudents] = useState([]);
@@ -24,7 +45,10 @@ const StudentsPage = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [pendingDeleteStudent, setPendingDeleteStudent] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
 
   const loadStudents = async () => {
     try {
@@ -53,21 +77,20 @@ const StudentsPage = () => {
     setIsFormModalOpen(true);
   };
 
-  const openEditModal = (student) => {
+  const openEditModal = async (student) => {
     setEditingId(student.id);
-    setForm({
-      nom: student.nom || '',
-      prenom: student.prenom || '',
-      email: student.email || '',
-      telephone: student.telephone || '',
-      motDePasse: '',
-      cne: student.cne || '',
-      role: student.role || 'ETUDIANT',
-      estActif: Boolean(student.estActif),
-    });
+    setForm(buildStudentFormValues(student));
     setErrorMessage('');
     setSuccessMessage('');
     setIsFormModalOpen(true);
+
+    try {
+      const { data } = await getStudentById(student.id);
+      setForm(buildStudentFormValues(data || student));
+    } catch (error) {
+      console.error('Failed to load student details for edit:', error);
+      setErrorMessage('Impossible de charger toutes les informations de l’étudiant pour l’édition.');
+    }
   };
 
   const closeFormModal = () => {
@@ -128,9 +151,31 @@ const StudentsPage = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const openDetailsModal = async (student) => {
+    try {
+      setDetailsLoading(true);
+      setSelectedStudent(null);
+      setIsDetailsModalOpen(true);
+
+      const { data } = await getStudentById(student.id);
+      setSelectedStudent(data || student);
+    } catch (error) {
+      console.error('Failed to load student details:', error);
+      setSelectedStudent(student);
+      setErrorMessage('Impossible de charger les détails complets de l’étudiant.');
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
   const closeDeleteModal = () => {
     setPendingDeleteStudent(null);
     setIsDeleteModalOpen(false);
+  };
+
+  const closeDetailsModal = () => {
+    setSelectedStudent(null);
+    setIsDetailsModalOpen(false);
   };
 
   const handleDelete = async () => {
@@ -180,6 +225,9 @@ const StudentsPage = () => {
       label: 'Actions',
       render: (row) => (
         <div className="d-flex gap-2">
+          <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openDetailsModal(row)}>
+            Voir
+          </button>
           <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openEditModal(row)}>
             Modifier
           </button>
@@ -193,7 +241,7 @@ const StudentsPage = () => {
 
   return (
     <>
-      <div className={`page-shell ${isFormModalOpen || isDeleteModalOpen ? 'page-blur' : ''}`}>
+      <div className={`page-shell ${isFormModalOpen || isDeleteModalOpen || isDetailsModalOpen ? 'page-blur' : ''}`}>
         <header className="page-header">
           <div className="page-title-row">
             <h1>Étudiants</h1>
@@ -296,6 +344,26 @@ const StudentsPage = () => {
                       <input className="form-control" name="cne" value={form.cne} onChange={handleChange} />
                     </div>
                     <div className="col-md-6">
+                      <label className="form-label">Date de naissance</label>
+                      <input className="form-control" type="date" name="dateNaissance" value={form.dateNaissance} onChange={handleChange} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Nom du parent</label>
+                      <input className="form-control" name="nomParent" value={form.nomParent} onChange={handleChange} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Téléphone du parent</label>
+                      <input className="form-control" name="telephoneParent" value={form.telephoneParent} onChange={handleChange} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Email du parent</label>
+                      <input className="form-control" type="email" name="emailParent" value={form.emailParent} onChange={handleChange} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Classe ID</label>
+                      <input className="form-control" type="number" name="classeId" value={form.classeId} onChange={handleChange} />
+                    </div>
+                    <div className="col-md-6">
                       <label className="form-label">Rôle</label>
                       <select className="form-select" name="role" value={form.role} onChange={handleChange}>
                         <option value="ETUDIANT">Étudiant</option>
@@ -373,6 +441,92 @@ const StudentsPage = () => {
                 </button>
                 <button className="btn btn-danger" type="button" onClick={handleDelete}>
                   Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isDetailsModalOpen && selectedStudent && (
+        <div className="student-modal-backdrop" onClick={closeDetailsModal}>
+          <div className="student-modal student-modal-shell" onClick={(event) => event.stopPropagation()}>
+            <div className="student-modal-visual">
+              <div className="student-modal-visual-badge">VPI • Détails étudiant</div>
+              <h4>{selectedStudent.nom} {selectedStudent.prenom}</h4>
+              <p>Informations complètes de l’étudiant et de ses parents.</p>
+            </div>
+
+            <div className="student-modal-body">
+              {detailsLoading ? (
+                <div className="text-center p-4">Chargement des détails...</div>
+              ) : (
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Nom</label>
+                    <div className="form-control bg-light border-0">{selectedStudent.nom || '—'}</div>
+                  </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Prénom</label>
+                  <div className="form-control bg-light border-0">{selectedStudent.prenom || '—'}</div>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Email</label>
+                  <div className="form-control bg-light border-0">{selectedStudent.email || '—'}</div>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Téléphone</label>
+                  <div className="form-control bg-light border-0">{selectedStudent.telephone || '—'}</div>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">CNE</label>
+                  <div className="form-control bg-light border-0">{selectedStudent.cne || '—'}</div>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Date de naissance</label>
+                  <div className="form-control bg-light border-0">{selectedStudent.dateNaissance || '—'}</div>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Nom du parent</label>
+                  <div className="form-control bg-light border-0">{selectedStudent.nomParent || '—'}</div>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Téléphone du parent</label>
+                  <div className="form-control bg-light border-0">{selectedStudent.telephoneParent || '—'}</div>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Email du parent</label>
+                  <div className="form-control bg-light border-0">{selectedStudent.emailParent || '—'}</div>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Classe ID</label>
+                  <div className="form-control bg-light border-0">{selectedStudent.classeId ?? '—'}</div>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Statut</label>
+                  <div className="form-control bg-light border-0">{selectedStudent.estActif ? 'Actif' : 'Inactif'}</div>
+                </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Rôle</label>
+                    <div className="form-control bg-light border-0">{selectedStudent.role || 'ETUDIANT'}</div>
+                  </div>
+                </div>
+              )}
+
+              <div className="student-modal-actions mt-4">
+                <button className="btn btn-outline-secondary" type="button" onClick={closeDetailsModal}>
+                  Fermer
                 </button>
               </div>
             </div>
