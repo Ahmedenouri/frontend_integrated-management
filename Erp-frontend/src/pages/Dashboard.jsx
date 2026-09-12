@@ -192,45 +192,45 @@ const Dashboard = () => {
   const statCards = useMemo(() => {
     if (role === 'ROLE_DIRECTEUR') {
       return [
-        { label: 'Total students', value: dashboard.totalEtudiants ?? studentRows.length, icon: 'bi-people-fill', tone: 'positive' },
-        { label: 'Revenue overview', value: formatCurrency(dashboard.totalEncaissementPercu ?? 0), icon: 'bi-currency-dollar', tone: 'positive' },
-        { label: 'Staff count', value: teacherRows.length, icon: 'bi-person-badge-fill', tone: 'primary' },
-        { label: 'System alerts', value: absenceRows.length, icon: 'bi-exclamation-triangle-fill', tone: 'warning' },
+        { label: 'Total étudiants', value: dashboard.totalEtudiants ?? studentRows.length, icon: 'bi-people-fill', tone: 'positive' },
+        { label: 'Vue du chiffre d’affaires', value: formatCurrency(dashboard.totalEncaissementPercu ?? 0), icon: 'bi-currency-dollar', tone: 'positive' },
+        { label: 'Effectif du personnel', value: teacherRows.length, icon: 'bi-person-badge-fill', tone: 'primary' },
+        { label: 'Alertes système', value: absenceRows.length, icon: 'bi-exclamation-triangle-fill', tone: 'warning' },
       ];
     }
 
     if (role === 'ROLE_RESPONSABLE_FINANCIER') {
       return [
-        { label: 'Unpaid fees', value: dashboard.totalImpayes ?? 0, icon: 'bi-cash-stack', tone: 'warning' },
-        { label: 'Collected', value: formatCurrency(dashboard.totalEncaissementPercu ?? 0), icon: 'bi-receipt', tone: 'positive' },
-        { label: 'Late students', value: dashboard.nombreEtudiantsEnRetard ?? 0, icon: 'bi-clock-history', tone: 'danger' },
-        { label: 'Payments', value: paymentRows.length, icon: 'bi-credit-card', tone: 'primary' },
+        { label: 'Frais impayés', value: dashboard.totalImpayes ?? 0, icon: 'bi-cash-stack', tone: 'warning' },
+        { label: 'Encaissement', value: formatCurrency(dashboard.totalEncaissementPercu ?? 0), icon: 'bi-receipt', tone: 'positive' },
+        { label: 'Étudiants en retard', value: dashboard.nombreEtudiantsEnRetard ?? 0, icon: 'bi-clock-history', tone: 'danger' },
+        { label: 'Paiements', value: paymentRows.length, icon: 'bi-credit-card', tone: 'primary' },
       ];
     }
 
     if (role === 'ROLE_SURVEILLANT') {
       return [
-        { label: 'Cumulative absences', value: dashboard.totalAbsences ?? absenceRows.length, icon: 'bi-calendar-x-fill', tone: 'danger' },
-        { label: 'Hours lost', value: dashboard.totalHeuresAbsences ?? 0, icon: 'bi-clock-fill', tone: 'warning' },
+        { label: 'Absences cumulées', value: dashboard.totalAbsences ?? absenceRows.length, icon: 'bi-calendar-x-fill', tone: 'danger' },
+        { label: 'Heures perdues', value: dashboard.totalHeuresAbsences ?? 0, icon: 'bi-clock-fill', tone: 'warning' },
         { label: 'Sanctions', value: dashboard.totalSanctions ?? 0, icon: 'bi-shield-exclamation', tone: 'primary' },
-        { label: 'Students', value: studentRows.length, icon: 'bi-people-fill', tone: 'positive' },
+        { label: 'Étudiants', value: studentRows.length, icon: 'bi-people-fill', tone: 'positive' },
       ];
     }
 
     if (role === 'ROLE_PROFESSEUR') {
       return [
-        { label: 'Assigned classes', value: classAssignments.length, icon: 'bi-mortarboard-fill', tone: 'primary' },
-        { label: 'Student groups', value: studentAssignments.length, icon: 'bi-people-fill', tone: 'positive' },
-        { label: 'Schedule items', value: timeTableRows.length, icon: 'bi-calendar3', tone: 'warning' },
-        { label: 'Grades entered', value: noteRows.length, icon: 'bi-journal-check', tone: 'positive' },
+        { label: 'Classes assignées', value: classAssignments.length, icon: 'bi-mortarboard-fill', tone: 'primary' },
+        { label: 'Groupes d’étudiants', value: studentAssignments.length, icon: 'bi-people-fill', tone: 'positive' },
+        { label: 'Éléments du planning', value: timeTableRows.length, icon: 'bi-calendar3', tone: 'warning' },
+        { label: 'Notes saisies', value: noteRows.length, icon: 'bi-journal-check', tone: 'positive' },
       ];
     }
 
     return [
-      { label: 'Current GPA', value: '—', icon: 'bi-graph-up-arrow', tone: 'positive' },
-      { label: 'Subject averages', value: subjectRows.length, icon: 'bi-book-half', tone: 'primary' },
+      { label: 'Moyenne générale', value: '—', icon: 'bi-graph-up-arrow', tone: 'positive' },
+      { label: 'Moyennes par matière', value: subjectRows.length, icon: 'bi-book-half', tone: 'primary' },
       { label: 'Absences', value: absenceRows.length, icon: 'bi-calendar-x-fill', tone: 'danger' },
-      { label: 'Timetable', value: timeTableRows.length, icon: 'bi-calendar3', tone: 'warning' },
+      { label: 'Emploi du temps', value: timeTableRows.length, icon: 'bi-calendar3', tone: 'warning' },
     ];
   }, [absenceRows.length, classAssignments.length, dashboard, role, paymentRows.length, studentAssignments.length, studentRows.length, subjectRows.length, teacherRows.length, timeTableRows.length, noteRows.length]);
 
@@ -329,14 +329,14 @@ const Dashboard = () => {
       <header className="page-header">
         <div className="page-title-row">
           <h1>
-            {role === 'ROLE_DIRECTEUR' && 'Director dashboard'}
-            {role === 'ROLE_RESPONSABLE_FINANCIER' && 'Finance dashboard'}
-            {role === 'ROLE_SURVEILLANT' && 'Discipline dashboard'}
-            {role === 'ROLE_PROFESSEUR' && 'Teaching dashboard'}
-            {role === 'ROLE_ETUDIANT' && 'Student dashboard'}
+            {role === 'ROLE_DIRECTEUR' && 'Tableau de bord directeur'}
+            {role === 'ROLE_RESPONSABLE_FINANCIER' && 'Tableau de bord financier'}
+            {role === 'ROLE_SURVEILLANT' && 'Tableau de bord de discipline'}
+            {role === 'ROLE_PROFESSEUR' && 'Tableau de bord enseignant'}
+            {role === 'ROLE_ETUDIANT' && 'Tableau de bord étudiant'}
           </h1>
         </div>
-        <p className="page-subtitle">Personalized ECOSCOL ERP overview based on your role permissions.</p>
+        <p className="page-subtitle">Vue personnalisée du ERP ECOSCOL selon les permissions de votre rôle.</p>
       </header>
 
       {message && (
@@ -362,10 +362,10 @@ const Dashboard = () => {
           <div className="app-card rounded-card insights-card">
             <div className="card-header card-header-split">
               <div>
-                <h3>System activity stream</h3>
-                <small className="card-subtitle">Live operations across the campus</small>
+                <h3>Flux d’activité système</h3>
+                <small className="card-subtitle">Opérations en direct sur le campus</small>
               </div>
-              <span className="timeline-pill">Updated now</span>
+              <span className="timeline-pill">Mise à jour</span>
             </div>
             <ul className="activity-list list-unstyled">
               <li className="activity-item modern-item">
@@ -373,18 +373,18 @@ const Dashboard = () => {
                   <i className="bi bi-people-fill" />
                 </div>
                 <div className="activity-copy">
-                  <strong>{studentRows.length} students registered</strong>
-                  <small>Latest live student count</small>
+                  <strong>{studentRows.length} étudiants inscrits</strong>
+                  <small>Dernier total en direct des étudiants</small>
                 </div>
-                <span className="activity-badge positive">Live</span>
+                <span className="activity-badge positive">En ligne</span>
               </li>
               <li className="activity-item modern-item">
                 <div className="activity-icon purple">
                   <i className="bi bi-person-badge-fill" />
                 </div>
                 <div className="activity-copy">
-                  <strong>{teacherRows.length} staff members active</strong>
-                  <small>Academic and administrative workforce</small>
+                  <strong>{teacherRows.length} membres du personnel actifs</strong>
+                  <small>Effectif académique et administratif</small>
                 </div>
                 <span className="activity-badge neutral">Stable</span>
               </li>
@@ -393,10 +393,10 @@ const Dashboard = () => {
                   <i className="bi bi-credit-card" />
                 </div>
                 <div className="activity-copy">
-                  <strong>{paymentRows.length} payment records</strong>
-                  <small>Finance activity observed in the system</small>
+                  <strong>{paymentRows.length} enregistrements de paiement</strong>
+                  <small>Activité financière observée dans le système</small>
                 </div>
-                <span className="activity-badge info">Tracked</span>
+                <span className="activity-badge info">Suivi</span>
               </li>
             </ul>
           </div>
@@ -404,42 +404,42 @@ const Dashboard = () => {
           <div className="app-card rounded-card insights-card">
             <div className="card-header card-header-split">
               <div>
-                <h3>School overview</h3>
-                <small className="card-subtitle">Key indicators at a glance</small>
+                <h3>Vue générale de l’école</h3>
+                <small className="card-subtitle">Indicateurs clés en un coup d’œil</small>
               </div>
-              <span className="timeline-pill alt">This term</span>
+              <span className="timeline-pill alt">Ce trimestre</span>
             </div>
 
             <div className="overview-grid">
               <div className="overview-item">
-                <span className="overview-label">Total classes</span>
+                <span className="overview-label">Classes totales</span>
                 <strong>{dashboard.totalClasses ?? classRows.length}</strong>
-                <small>Active classroom groups</small>
+                <small>Groupes de classe actifs</small>
               </div>
               <div className="overview-item">
-                <span className="overview-label">Total subjects</span>
+                <span className="overview-label">Matières totales</span>
                 <strong>{dashboard.totalMatieres ?? subjectRows.length}</strong>
-                <small>Curriculum coverage</small>
+                <small>Couverture pédagogique</small>
               </div>
               <div className="overview-item">
-                <span className="overview-label">Average score</span>
+                <span className="overview-label">Moyenne générale</span>
                 <strong>{dashboard.moyenneEtablissement ?? '—'}</strong>
-                <small>Institution-wide performance</small>
+                <small>Performance globale de l’établissement</small>
               </div>
               <div className="overview-item">
-                <span className="overview-label">Outstanding payments</span>
+                <span className="overview-label">Paiements en attente</span>
                 <strong>{formatCurrency(dashboard.totalImpayes ?? 0)}</strong>
-                <small>Finance follow-up required</small>
+                <small>Suivi financier requis</small>
               </div>
             </div>
 
             <div className="overview-footer">
               <div className="mini-stat">
-                <span>Enrollment</span>
+                <span>Inscriptions</span>
                 <strong>{studentRows.length}</strong>
               </div>
               <div className="mini-stat">
-                <span>Staff</span>
+                <span>Personnel</span>
                 <strong>{teacherRows.length}</strong>
               </div>
               <div className="mini-stat highlight">
@@ -455,15 +455,15 @@ const Dashboard = () => {
         <section className="card-grid">
           <div className="app-card rounded-card table-card">
             <div className="card-header">
-              <h3>Unpaid fees tracker</h3>
+              <h3>Suivi des frais impayés</h3>
             </div>
             <div className="table-responsive">
               <table className="table align-middle">
                 <thead>
                   <tr>
-                    <th>Student</th>
-                    <th>Status</th>
-                    <th>Amount</th>
+                    <th>Étudiant</th>
+                    <th>Statut</th>
+                    <th>Montant</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -481,17 +481,17 @@ const Dashboard = () => {
 
           <div className="app-card rounded-card p-3">
             <div className="card-header">
-              <h3>Quick actions</h3>
+              <h3>Actions rapides</h3>
             </div>
 
             <form onSubmit={handlePaymentSubmit} className="mb-4">
               <div className="row g-2">
                 <div className="col-md-6">
-                  <label className="form-label">Reference</label>
+                  <label className="form-label">Référence</label>
                   <input className="form-control" value={paymentForm.referencePaiement} onChange={(e) => setPaymentForm({ ...paymentForm, referencePaiement: e.target.value })} />
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label">Student ID</label>
+                  <label className="form-label">ID étudiant</label>
                   <input className="form-control" type="number" value={paymentForm.etudiantId} onChange={(e) => setPaymentForm({ ...paymentForm, etudiantId: e.target.value })} />
                 </div>
                 <div className="col-md-4">
@@ -513,7 +513,7 @@ const Dashboard = () => {
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Status</label>
+                  <label className="form-label">Statut</label>
                   <select className="form-select" value={paymentForm.statut} onChange={(e) => setPaymentForm({ ...paymentForm, statut: e.target.value })}>
                     <option value="PAYE">Payé</option>
                     <option value="PARTIEL">Partiel</option>
@@ -522,7 +522,7 @@ const Dashboard = () => {
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Amount</label>
+                  <label className="form-label">Montant</label>
                   <input className="form-control" type="number" step="0.01" value={paymentForm.montant} onChange={(e) => setPaymentForm({ ...paymentForm, montant: e.target.value })} />
                 </div>
                 <div className="col-md-4">
@@ -530,17 +530,17 @@ const Dashboard = () => {
                   <input className="form-control" type="date" value={paymentForm.datePaiement} onChange={(e) => setPaymentForm({ ...paymentForm, datePaiement: e.target.value })} />
                 </div>
               </div>
-              <button className="btn btn-primary mt-3" type="submit">Add payment</button>
+              <button className="btn btn-primary mt-3" type="submit">Ajouter un paiement</button>
             </form>
 
             <form onSubmit={handleReceiptSubmit}>
               <div className="row g-2">
                 <div className="col-md-4">
-                  <label className="form-label">Receipt number</label>
+                  <label className="form-label">Numéro de reçu</label>
                   <input className="form-control" value={receiptForm.numeroRecu} onChange={(e) => setReceiptForm({ ...receiptForm, numeroRecu: e.target.value })} />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Payment ID</label>
+                  <label className="form-label">ID paiement</label>
                   <input className="form-control" type="number" value={receiptForm.paiementId} onChange={(e) => setReceiptForm({ ...receiptForm, paiementId: e.target.value })} />
                 </div>
                 <div className="col-md-4">
@@ -548,11 +548,11 @@ const Dashboard = () => {
                   <input className="form-control" type="date" value={receiptForm.dateEmission} onChange={(e) => setReceiptForm({ ...receiptForm, dateEmission: e.target.value })} />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Amount paid</label>
+                  <label className="form-label">Montant payé</label>
                   <input className="form-control" type="number" step="0.01" value={receiptForm.montantPaye} onChange={(e) => setReceiptForm({ ...receiptForm, montantPaye: e.target.value })} />
                 </div>
               </div>
-              <button className="btn btn-primary mt-3" type="submit">Add receipt</button>
+              <button className="btn btn-primary mt-3" type="submit">Ajouter un reçu</button>
             </form>
           </div>
         </section>
@@ -562,15 +562,15 @@ const Dashboard = () => {
         <section className="card-grid">
           <div className="app-card rounded-card table-card">
             <div className="card-header">
-              <h3>Cumulative absences</h3>
+              <h3>Absences cumulées</h3>
             </div>
             <div className="table-responsive">
               <table className="table align-middle">
                 <thead>
                   <tr>
-                    <th>Student</th>
-                    <th>Hours</th>
-                    <th>Alert</th>
+                    <th>Étudiant</th>
+                    <th>Heures</th>
+                    <th>Alerte</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -596,12 +596,12 @@ const Dashboard = () => {
 
           <div className="app-card rounded-card p-3">
             <div className="card-header">
-              <h3>Quick sanction entry</h3>
+              <h3>Saisie rapide de sanction</h3>
             </div>
             <form onSubmit={handleSanctionSubmit}>
               <div className="row g-2">
                 <div className="col-md-4">
-                  <label className="form-label">Student ID</label>
+                  <label className="form-label">ID étudiant</label>
                   <input className="form-control" type="number" value={sanctionForm.etudiantId} onChange={(e) => setSanctionForm({ ...sanctionForm, etudiantId: e.target.value })} />
                 </div>
                 <div className="col-md-4">
@@ -614,11 +614,11 @@ const Dashboard = () => {
                   </select>
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Absence hours</label>
+                  <label className="form-label">Heures d’absence</label>
                   <input className="form-control" type="number" value={sanctionForm.totalAbsencesAuMoment} onChange={(e) => setSanctionForm({ ...sanctionForm, totalAbsencesAuMoment: e.target.value })} />
                 </div>
                 <div className="col-md-12">
-                  <label className="form-label">Reason</label>
+                  <label className="form-label">Motif</label>
                   <textarea className="form-control" rows={3} value={sanctionForm.motif} onChange={(e) => setSanctionForm({ ...sanctionForm, motif: e.target.value })} />
                 </div>
                 <div className="col-md-6">
@@ -626,7 +626,7 @@ const Dashboard = () => {
                   <input className="form-control" type="date" value={sanctionForm.dateEmission} onChange={(e) => setSanctionForm({ ...sanctionForm, dateEmission: e.target.value })} />
                 </div>
               </div>
-              <button className="btn btn-primary mt-3" type="submit">Save sanction</button>
+              <button className="btn btn-primary mt-3" type="submit">Enregistrer la sanction</button>
             </form>
           </div>
         </section>
@@ -636,14 +636,14 @@ const Dashboard = () => {
         <section className="card-grid">
           <div className="app-card rounded-card table-card">
             <div className="card-header">
-              <h3>Assigned classes</h3>
+              <h3>Classes assignées</h3>
             </div>
             <div className="table-responsive">
               <table className="table align-middle">
                 <thead>
                   <tr>
-                    <th>Class</th>
-                    <th>Subject</th>
+                    <th>Classe</th>
+                    <th>Matière</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -660,7 +660,7 @@ const Dashboard = () => {
 
           <div className="app-card rounded-card p-3">
             <div className="card-header">
-              <h3>Today's teaching schedule</h3>
+              <h3>Planning de cours du jour</h3>
             </div>
             <ul className="activity-list list-unstyled">
               {timeTableRows.map((schedule) => (
@@ -677,20 +677,20 @@ const Dashboard = () => {
 
           <div className="app-card rounded-card p-3">
             <div className="card-header">
-              <h3>Quick grade entry</h3>
+              <h3>Saisie rapide des notes</h3>
             </div>
             <form onSubmit={handleNoteSubmit}>
               <div className="row g-2">
                 <div className="col-md-4">
-                  <label className="form-label">Student ID</label>
+                  <label className="form-label">ID étudiant</label>
                   <input className="form-control" type="number" value={noteForm.etudiantId} onChange={(e) => setNoteForm({ ...noteForm, etudiantId: e.target.value })} />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Evaluation ID</label>
+                  <label className="form-label">ID évaluation</label>
                   <input className="form-control" type="number" value={noteForm.evaluationId} onChange={(e) => setNoteForm({ ...noteForm, evaluationId: e.target.value })} />
                 </div>
                 <div className="col-md-4">
-                  <label className="form-label">Value</label>
+                  <label className="form-label">Valeur</label>
                   <input className="form-control" type="number" step="0.01" value={noteForm.valeur} onChange={(e) => setNoteForm({ ...noteForm, valeur: e.target.value })} />
                 </div>
                 <div className="col-md-6">
@@ -698,11 +698,11 @@ const Dashboard = () => {
                   <input className="form-control" type="date" value={noteForm.dateSaisie} onChange={(e) => setNoteForm({ ...noteForm, dateSaisie: e.target.value })} />
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label">Appreciation</label>
+                  <label className="form-label">Appréciation</label>
                   <input className="form-control" value={noteForm.appreciation} onChange={(e) => setNoteForm({ ...noteForm, appreciation: e.target.value })} />
                 </div>
               </div>
-              <button className="btn btn-primary mt-3" type="submit">Submit grade</button>
+              <button className="btn btn-primary mt-3" type="submit">Soumettre la note</button>
             </form>
           </div>
         </section>
@@ -712,14 +712,14 @@ const Dashboard = () => {
         <section className="card-grid">
           <div className="app-card rounded-card table-card">
             <div className="card-header">
-              <h3>Personal GPA & subject averages</h3>
+              <h3>Moyenne générale et moyennes par matière</h3>
             </div>
             <div className="table-responsive">
               <table className="table align-middle">
                 <thead>
                   <tr>
-                    <th>Subject</th>
-                    <th>Average</th>
+                    <th>Matière</th>
+                    <th>Moyenne</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -736,7 +736,7 @@ const Dashboard = () => {
 
           <div className="app-card rounded-card p-3">
             <div className="card-header">
-              <h3>Personal timetable</h3>
+              <h3>Emploi du temps personnel</h3>
             </div>
             <ul className="activity-list list-unstyled">
               {timeTableRows.map((session) => (
@@ -753,16 +753,16 @@ const Dashboard = () => {
 
           <div className="app-card rounded-card p-3">
             <div className="card-header">
-              <h3>Cumulative absences</h3>
-              <button type="button" className="btn btn-link text-primary px-0" onClick={downloadBulletin}>Download bulletin PDF</button>
+              <h3>Absences cumulées</h3>
+              <button type="button" className="btn btn-link text-primary px-0" onClick={downloadBulletin}>Télécharger le bulletin PDF</button>
             </div>
             <div className="table-responsive">
               <table className="table align-middle">
                 <thead>
                   <tr>
                     <th>Date</th>
-                    <th>Reason</th>
-                    <th>Justified</th>
+                    <th>Motif</th>
+                    <th>Justifiée</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -772,7 +772,7 @@ const Dashboard = () => {
                       <td>{absence.motif || '—'}</td>
                       <td>
                         <span className={`badge-soft ${absence.justifiee ? 'success' : 'danger'}`}>
-                          {absence.justifiee ? 'Yes' : 'No'}
+                          {absence.justifiee ? 'Oui' : 'Non'}
                         </span>
                       </td>
                     </tr>

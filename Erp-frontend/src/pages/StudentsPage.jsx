@@ -241,88 +241,114 @@ const StudentsPage = () => {
 
       {isFormModalOpen && (
         <div className="student-modal-backdrop" onClick={closeFormModal}>
-          <div className="student-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="student-modal-header">
-              <h3>{editingId ? 'Modifier un étudiant' : 'Ajouter un étudiant'}</h3>
-              <button className="btn-close" type="button" onClick={closeFormModal} aria-label="Fermer" />
+          <div className="student-modal student-modal-shell" onClick={(event) => event.stopPropagation()}>
+            <div className="student-modal-visual">
+              <div className="student-modal-visual-badge">VPI • Gestion scolaire</div>
+              <h4>{editingId ? 'Mettre à jour le profil' : 'Créer un nouvel étudiant'}</h4>
+              <p>
+                {editingId
+                  ? 'Modifiez les informations de l’ étudiant et enregistrez les changements en quelques clics.'
+                  : 'Remplissez les informations principales pour ajouter un nouvel étudiant à l’établissement.'}
+              </p>
+
+              <div className="student-modal-stat-grid">
+                <div className="student-modal-stat">
+                  <span>Étudiants</span>
+                  <strong>{students.length}</strong>
+                </div>
+                <div className="student-modal-stat">
+                  <span>Actifs</span>
+                  <strong>{students.filter((student) => student.estActif).length}</strong>
+                </div>
+              </div>
             </div>
 
-            <div className="student-modal-body">
-              <form onSubmit={handleSubmit}>
-                <div className="row g-3">
-                  <div className="col-md-4">
-                    <label className="form-label">Nom</label>
-                    <input className="form-control" name="nom" value={form.nom} onChange={handleChange} required />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Prénom</label>
-                    <input className="form-control" name="prenom" value={form.prenom} onChange={handleChange} required />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Email</label>
-                    <input className="form-control" type="email" name="email" value={form.email} onChange={handleChange} required />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Téléphone</label>
-                    <input className="form-control" name="telephone" value={form.telephone} onChange={handleChange} />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">CNE</label>
-                    <input className="form-control" name="cne" value={form.cne} onChange={handleChange} />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Rôle</label>
-                    <select className="form-select" name="role" value={form.role} onChange={handleChange}>
-                      <option value="ETUDIANT">Étudiant</option>
-                      <option value="DIRECTEUR">Directeur</option>
-                      <option value="PROFESSEUR">Professeur</option>
-                      <option value="SURVEILLANT">Surveillant</option>
-                      <option value="RESPONSABLE_FINANCIER">Responsable financier</option>
-                    </select>
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Mot de passe</label>
-                    <input
-                      className="form-control"
-                      type="password"
-                      name="motDePasse"
-                      value={form.motDePasse}
-                      onChange={handleChange}
-                      placeholder={editingId ? 'Laisser vide pour conserver le mot de passe actuel' : 'Obligatoire'}
-                    />
-                  </div>
-                  <div className="col-md-6 d-flex align-items-center">
-                    <div className="form-check mt-4">
+            <div className="student-modal-panel">
+              <div className="student-modal-header">
+                <div>
+                  <small className="student-modal-kicker">Fiche utilisateur</small>
+                  <h3>{editingId ? 'Modifier un étudiant' : 'Ajouter un étudiant'}</h3>
+                </div>
+                <button className="btn-close" type="button" onClick={closeFormModal} aria-label="Fermer" />
+              </div>
+
+              <div className="student-modal-body">
+                <form onSubmit={handleSubmit}>
+                  <div className="row g-3 student-form-grid">
+                    <div className="col-md-6">
+                      <label className="form-label">Nom</label>
+                      <input className="form-control" name="nom" value={form.nom} onChange={handleChange} required />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Prénom</label>
+                      <input className="form-control" name="prenom" value={form.prenom} onChange={handleChange} required />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Email</label>
+                      <input className="form-control" type="email" name="email" value={form.email} onChange={handleChange} required />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Téléphone</label>
+                      <input className="form-control" name="telephone" value={form.telephone} onChange={handleChange} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">CNE</label>
+                      <input className="form-control" name="cne" value={form.cne} onChange={handleChange} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Rôle</label>
+                      <select className="form-select" name="role" value={form.role} onChange={handleChange}>
+                        <option value="ETUDIANT">Étudiant</option>
+                        <option value="DIRECTEUR">Directeur</option>
+                        <option value="PROFESSEUR">Professeur</option>
+                        <option value="SURVEILLANT">Surveillant</option>
+                        <option value="RESPONSABLE_FINANCIER">Responsable financier</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Mot de passe</label>
                       <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="estActifModal"
-                        name="estActif"
-                        checked={form.estActif}
+                        className="form-control"
+                        type="password"
+                        name="motDePasse"
+                        value={form.motDePasse}
                         onChange={handleChange}
+                        placeholder={editingId ? 'Laisser vide pour conserver le mot de passe actuel' : 'Obligatoire'}
                       />
-                      <label className="form-check-label" htmlFor="estActifModal">
-                        Étudiant actif
-                      </label>
+                    </div>
+                    <div className="col-md-6 student-toggle-wrap">
+                      <div className="form-check mt-4">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="estActifModal"
+                          name="estActif"
+                          checked={form.estActif}
+                          onChange={handleChange}
+                        />
+                        <label className="form-check-label" htmlFor="estActifModal">
+                          Étudiant actif
+                        </label>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {errorMessage && (
-                  <div className="alert alert-danger mt-3 mb-0" role="alert">
-                    {errorMessage}
+                  {errorMessage && (
+                    <div className="alert alert-danger mt-3 mb-0" role="alert">
+                      {errorMessage}
+                    </div>
+                  )}
+
+                  <div className="student-modal-actions">
+                    <button className="btn btn-outline-secondary" type="button" onClick={closeFormModal}>
+                      Fermer
+                    </button>
+                    <button className="btn btn-primary" type="submit" disabled={saving}>
+                      {saving ? 'Enregistrement...' : editingId ? 'Enregistrer les modifications' : 'Ajouter l\'étudiant'}
+                    </button>
                   </div>
-                )}
-
-                <div className="student-modal-actions">
-                  <button className="btn btn-outline-secondary" type="button" onClick={closeFormModal}>
-                    Fermer
-                  </button>
-                  <button className="btn btn-primary" type="submit" disabled={saving}>
-                    {saving ? 'Enregistrement...' : editingId ? 'Enregistrer les modifications' : 'Ajouter l\'étudiant'}
-                  </button>
-                </div>
-              </form>
+                </form>
+              </div>
             </div>
           </div>
         </div>
