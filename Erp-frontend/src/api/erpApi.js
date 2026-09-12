@@ -129,6 +129,14 @@ export const deleteMatiere = (id) => axiosClient.delete(`/api-matiere/delete-Mat
 
 export const getAllEvaluations = () => axiosClient.get('/api-evaluation/getAllEvaluations');
 
+export const getEvaluationById = (id) => axiosClient.get(`/api-evaluation/getEvaluationById/${id}`);
+
+export const createEvaluation = (payload) => axiosClient.post('/api-evaluation/add-Evaluation', payload);
+
+export const updateEvaluation = (id, payload) => axiosClient.patch(`/api-evaluation/update-Evaluation/${id}`, payload);
+
+export const deleteEvaluation = (id) => axiosClient.delete(`/api-evaluation/delete-Evaluation/${id}`);
+
 export const getAllEmploisDuTemps = () => axiosClient.get('/api-emploi-du-temps/getAllEmploisDuTemps');
 
 export const getMonEmploiDuTemps = () => axiosClient.get('/api-emploi-du-temps/mon-emploi');
