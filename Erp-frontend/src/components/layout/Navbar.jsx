@@ -1,11 +1,19 @@
 import { useState } from 'react';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const Navbar = () => {
   const { userProfile, userRole, logout } = useAuth();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  const fullName = userProfile?.fullName || userProfile?.name || userProfile?.username || 'Utilisateur VPI';
+  const fullName =
+    userProfile?.fullName ||
+    [userProfile?.nom, userProfile?.prenom].filter(Boolean).join(' ') ||
+    userProfile?.name ||
+    userProfile?.username ||
+    userProfile?.email ||
+    'Utilisateur VPI';
   const normalizedRole = userRole?.replace(/^ROLE_/, '').replace(/_/g, ' ') || 'UTILISATEUR';
   const initials = fullName
     .split(' ')
@@ -36,18 +44,52 @@ const Navbar = () => {
         </div>
 
         <div className="navbar-actions">
-          <div className="user-pill">
-            <div className="avatar-circle">{initials}</div>
-            <div className="user-meta">
-              <strong>{fullName}</strong>
-              <small className="role-pill">{normalizedRole}</small>
-            </div>
-          </div>
+          <div className="user-dropdown">
+            <button
+              type="button"
+              className="user-pill user-dropdown-toggle"
+              onClick={() => setIsUserMenuOpen((prev) => !prev)}
+            >
+              <div className="avatar-circle">{initials}</div>
 
-          <button className="btn btn-logout" type="button" onClick={openLogoutModal}>
-            <i className="bi bi-box-arrow-right" />
-            Déconnexion
-          </button>
+              <div className="user-meta">
+                <strong>{fullName}</strong>
+                <small className="role-pill">{normalizedRole}</small>
+              </div>
+
+              <i className={`bi bi-chevron-down user-dropdown-icon ${isUserMenuOpen ? 'open' : ''}`} />
+            </button>
+
+            {isUserMenuOpen && (
+              <div className="user-dropdown-menu">
+                <div className="user-dropdown-header">
+                  <div className="avatar-circle user-dropdown-avatar">{initials}</div>
+
+                  <div className="user-dropdown-header-text">
+                    <strong>{fullName}</strong>
+                    <small>{userProfile?.email || userProfile?.username || 'email non disponible'}</small>
+                  </div>
+                </div>
+
+                <NavLink to="/profile" className="user-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
+                  <i className="bi bi-person-circle" />
+                  Profil
+                </NavLink>
+
+                <button
+                  type="button"
+                  className="user-dropdown-item user-dropdown-logout"
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    openLogoutModal();
+                  }}
+                >
+                  <i className="bi bi-box-arrow-right" />
+                  Déconnexion
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
