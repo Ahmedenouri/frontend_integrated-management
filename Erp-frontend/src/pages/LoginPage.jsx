@@ -42,9 +42,9 @@ const LoginPage = () => {
     <div className="auth-page">
       <div className="auth-card">
         <div className="d-flex align-items-center gap-3 mb-4">
-          <div className="brand-mark">E</div>
+          <div className="brand-mark">VPI</div>
           <div>
-            <div className="brand-label">ECOSCOL ERP</div>
+            <div className="brand-label">Victoria Professional Institute</div>
             <small className="text-muted">School Management System</small>
           </div>
         </div>

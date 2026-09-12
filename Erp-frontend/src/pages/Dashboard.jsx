@@ -358,67 +358,94 @@ const Dashboard = () => {
       </section>
 
       {role === 'ROLE_DIRECTEUR' && (
-        <section className="card-grid">
-          <div className="app-card rounded-card table-card">
-            <div className="card-header">
-              <h3>System activity stream</h3>
+        <section className="card-grid director-overview-grid">
+          <div className="app-card rounded-card insights-card">
+            <div className="card-header card-header-split">
+              <div>
+                <h3>System activity stream</h3>
+                <small className="card-subtitle">Live operations across the campus</small>
+              </div>
+              <span className="timeline-pill">Updated now</span>
             </div>
             <ul className="activity-list list-unstyled">
-              <li className="activity-item">
-                <div>
+              <li className="activity-item modern-item">
+                <div className="activity-icon blue">
+                  <i className="bi bi-people-fill" />
+                </div>
+                <div className="activity-copy">
                   <strong>{studentRows.length} students registered</strong>
                   <small>Latest live student count</small>
                 </div>
-                <i className="bi bi-people-fill text-primary" />
+                <span className="activity-badge positive">Live</span>
               </li>
-              <li className="activity-item">
-                <div>
+              <li className="activity-item modern-item">
+                <div className="activity-icon purple">
+                  <i className="bi bi-person-badge-fill" />
+                </div>
+                <div className="activity-copy">
                   <strong>{teacherRows.length} staff members active</strong>
                   <small>Academic and administrative workforce</small>
                 </div>
-                <i className="bi bi-person-badge-fill text-primary" />
+                <span className="activity-badge neutral">Stable</span>
               </li>
-              <li className="activity-item">
-                <div>
+              <li className="activity-item modern-item">
+                <div className="activity-icon green">
+                  <i className="bi bi-credit-card" />
+                </div>
+                <div className="activity-copy">
                   <strong>{paymentRows.length} payment records</strong>
                   <small>Finance activity observed in the system</small>
                 </div>
-                <i className="bi bi-credit-card text-primary" />
+                <span className="activity-badge info">Tracked</span>
               </li>
             </ul>
           </div>
 
-          <div className="app-card rounded-card table-card">
-            <div className="card-header">
-              <h3>School overview</h3>
+          <div className="app-card rounded-card insights-card">
+            <div className="card-header card-header-split">
+              <div>
+                <h3>School overview</h3>
+                <small className="card-subtitle">Key indicators at a glance</small>
+              </div>
+              <span className="timeline-pill alt">This term</span>
             </div>
-            <div className="table-responsive">
-              <table className="table align-middle">
-                <thead>
-                  <tr>
-                    <th>Metric</th>
-                    <th>Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Total classes</td>
-                    <td>{dashboard.totalClasses ?? classRows.length}</td>
-                  </tr>
-                  <tr>
-                    <td>Total subjects</td>
-                    <td>{dashboard.totalMatieres ?? subjectRows.length}</td>
-                  </tr>
-                  <tr>
-                    <td>Average school score</td>
-                    <td>{dashboard.moyenneEtablissement ?? '—'}</td>
-                  </tr>
-                  <tr>
-                    <td>Outstanding payments</td>
-                    <td>{formatCurrency(dashboard.totalImpayes ?? 0)}</td>
-                  </tr>
-                </tbody>
-              </table>
+
+            <div className="overview-grid">
+              <div className="overview-item">
+                <span className="overview-label">Total classes</span>
+                <strong>{dashboard.totalClasses ?? classRows.length}</strong>
+                <small>Active classroom groups</small>
+              </div>
+              <div className="overview-item">
+                <span className="overview-label">Total subjects</span>
+                <strong>{dashboard.totalMatieres ?? subjectRows.length}</strong>
+                <small>Curriculum coverage</small>
+              </div>
+              <div className="overview-item">
+                <span className="overview-label">Average score</span>
+                <strong>{dashboard.moyenneEtablissement ?? '—'}</strong>
+                <small>Institution-wide performance</small>
+              </div>
+              <div className="overview-item">
+                <span className="overview-label">Outstanding payments</span>
+                <strong>{formatCurrency(dashboard.totalImpayes ?? 0)}</strong>
+                <small>Finance follow-up required</small>
+              </div>
+            </div>
+
+            <div className="overview-footer">
+              <div className="mini-stat">
+                <span>Enrollment</span>
+                <strong>{studentRows.length}</strong>
+              </div>
+              <div className="mini-stat">
+                <span>Staff</span>
+                <strong>{teacherRows.length}</strong>
+              </div>
+              <div className="mini-stat highlight">
+                <span>Finance</span>
+                <strong>{formatCurrency(dashboard.totalImpayes ?? 0)}</strong>
+              </div>
             </div>
           </div>
         </section>
