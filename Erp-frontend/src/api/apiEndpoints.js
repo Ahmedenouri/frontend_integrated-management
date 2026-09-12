@@ -49,6 +49,8 @@ export const apiEndpoints = {
     getAllPaiements: () => axiosClient.get('/api-paiement/getAllPaiements'),
     getPaiementById: (id) => axiosClient.get(`/api-paiement/getPaiementById/${id}`),
     createPaiement: createEndpoint('POST', '/api-paiement/add-Paiement'),
+    updatePaiement: (id, payload) => axiosClient.patch(`/api-paiement/update-Paiement/${id}`, payload),
+    removePaiement: (id) => axiosClient.delete(`/api-paiement/delete-Paiement/${id}`),
     getImpayes: () => axiosClient.get('/api-paiement/impayes'),
     getMesPaiements: () => axiosClient.get('/api-paiement/mes-paiements'),
     createRecu: createEndpoint('POST', '/api-recu/add-Recu'),

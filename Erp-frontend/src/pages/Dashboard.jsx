@@ -123,15 +123,17 @@ const Dashboard = () => {
           setClassRows(Array.isArray(classes) ? classes : []);
           setSubjectRows(Array.isArray(matieres) ? matieres : []);
         } else if (normalizedRole === 'ROLE_RESPONSABLE_FINANCIER') {
-          const [{ data: financierData }, { data: paiements }, { data: students }] = await Promise.all([
+          const [{ data: financierData }, { data: paiements }, { data: students }, { data: classes }] = await Promise.all([
             getDashboardFinancier(),
             getAllPaiements(),
             getAllStudents(),
+            getAllClasses(),
           ]);
 
           setDashboard(financierData || {});
           setPaymentRows(Array.isArray(paiements) ? paiements : []);
           setStudentRows(Array.isArray(students) ? students : []);
+          setClassRows(Array.isArray(classes) ? classes : []);
         } else if (normalizedRole === 'ROLE_SURVEILLANT') {
           const [{ data: disciplineData }, { data: absences }, { data: students }] = await Promise.all([
             getDashboardDiscipline(),
@@ -188,6 +190,42 @@ const Dashboard = () => {
   }, [userProfile]);
 
   const role = userRole || 'ROLE_ETUDIANT';
+
+  const getStudentClassLabel = (student, classes = []) => {
+    const rawClasse = student?.classe;
+
+    if (rawClasse && typeof rawClasse === 'object') {
+      return rawClasse.nom || rawClasse.name || rawClasse.libelle || rawClasse.label || '—';
+    }
+
+    if (rawClasse !== undefined && rawClasse !== null && rawClasse !== '') {
+      const matchedClass = classes.find((item) => String(item.id) === String(rawClasse));
+
+      if (matchedClass) {
+        return matchedClass.nom || matchedClass.name || matchedClass.libelle || matchedClass.label || '—';
+      }
+
+      return rawClasse;
+    }
+
+    return student?.classeNom || student?.classeName || student?.className || student?.classeId || '—';
+  };
+
+  const financeRows = useMemo(() => {
+    return paymentRows.map((payment) => {
+      const student = studentRows.find((item) => String(item.id) === String(payment.etudiantId));
+
+      return {
+        ...payment,
+        nom: student?.nom || '—',
+        prenom: student?.prenom || '—',
+        email: student?.email || '—',
+        role: student?.role || 'ETUDIANT',
+        classe: getStudentClassLabel(student, classRows),
+        dateCreation: student?.dateCreation || student?.createdAt || '—',
+      };
+    });
+  }, [paymentRows, studentRows, classRows]);
 
   const statCards = useMemo(() => {
     if (role === 'ROLE_DIRECTEUR') {
@@ -461,15 +499,25 @@ const Dashboard = () => {
               <table className="table align-middle">
                 <thead>
                   <tr>
-                    <th>Étudiant</th>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Email</th>
+                    <th>Classe</th>
+                    <th>Rôle</th>
+                    <th>Date création</th>
                     <th>Statut</th>
                     <th>Montant</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {paymentRows.filter((payment) => payment.statut === 'EN_RETARD' || payment.statut === 'PARTIEL').map((payment) => (
+                  {financeRows.filter((payment) => payment.statut === 'EN_RETARD' || payment.statut === 'PARTIEL').map((payment) => (
                     <tr key={payment.id ?? payment.referencePaiement}>
-                      <td>{payment.etudiantId ?? '—'}</td>
+                      <td>{payment.nom}</td>
+                      <td>{payment.prenom}</td>
+                      <td>{payment.email}</td>
+                      <td>{payment.classe}</td>
+                      <td>{payment.role}</td>
+                      <td>{formatDate(payment.dateCreation)}</td>
                       <td><span className="badge-soft warning">{payment.statut}</span></td>
                       <td>{formatCurrency(payment.montant ?? 0)}</td>
                     </tr>
@@ -479,82 +527,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="app-card rounded-card p-3">
-            <div className="card-header">
-              <h3>Actions rapides</h3>
-            </div>
-
-            <form onSubmit={handlePaymentSubmit} className="mb-4">
-              <div className="row g-2">
-                <div className="col-md-6">
-                  <label className="form-label">Référence</label>
-                  <input className="form-control" value={paymentForm.referencePaiement} onChange={(e) => setPaymentForm({ ...paymentForm, referencePaiement: e.target.value })} />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">ID étudiant</label>
-                  <input className="form-control" type="number" value={paymentForm.etudiantId} onChange={(e) => setPaymentForm({ ...paymentForm, etudiantId: e.target.value })} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Type</label>
-                  <select className="form-select" value={paymentForm.typePaiement} onChange={(e) => setPaymentForm({ ...paymentForm, typePaiement: e.target.value })}>
-                    <option value="MENSUALITE">Mensualité</option>
-                    <option value="FRAIS_SCOLARITE">Frais scolaire</option>
-                    <option value="FRAIS_INSCRIPTION">Frais inscription</option>
-                    <option value="AUTRE">Autre</option>
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Mode</label>
-                  <select className="form-select" value={paymentForm.mode} onChange={(e) => setPaymentForm({ ...paymentForm, mode: e.target.value })}>
-                    <option value="VIREMENT">Virement</option>
-                    <option value="ESPECES">Espèces</option>
-                    <option value="CARTE_BANCAIRE">Carte bancaire</option>
-                    <option value="CHEQUE">Chèque</option>
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Statut</label>
-                  <select className="form-select" value={paymentForm.statut} onChange={(e) => setPaymentForm({ ...paymentForm, statut: e.target.value })}>
-                    <option value="PAYE">Payé</option>
-                    <option value="PARTIEL">Partiel</option>
-                    <option value="EN_RETARD">En retard</option>
-                    <option value="EN_ATTENTE">En attente</option>
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Montant</label>
-                  <input className="form-control" type="number" step="0.01" value={paymentForm.montant} onChange={(e) => setPaymentForm({ ...paymentForm, montant: e.target.value })} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Date</label>
-                  <input className="form-control" type="date" value={paymentForm.datePaiement} onChange={(e) => setPaymentForm({ ...paymentForm, datePaiement: e.target.value })} />
-                </div>
-              </div>
-              <button className="btn btn-primary mt-3" type="submit">Ajouter un paiement</button>
-            </form>
-
-            <form onSubmit={handleReceiptSubmit}>
-              <div className="row g-2">
-                <div className="col-md-4">
-                  <label className="form-label">Numéro de reçu</label>
-                  <input className="form-control" value={receiptForm.numeroRecu} onChange={(e) => setReceiptForm({ ...receiptForm, numeroRecu: e.target.value })} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">ID paiement</label>
-                  <input className="form-control" type="number" value={receiptForm.paiementId} onChange={(e) => setReceiptForm({ ...receiptForm, paiementId: e.target.value })} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Date</label>
-                  <input className="form-control" type="date" value={receiptForm.dateEmission} onChange={(e) => setReceiptForm({ ...receiptForm, dateEmission: e.target.value })} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Montant payé</label>
-                  <input className="form-control" type="number" step="0.01" value={receiptForm.montantPaye} onChange={(e) => setReceiptForm({ ...receiptForm, montantPaye: e.target.value })} />
-                </div>
-              </div>
-              <button className="btn btn-primary mt-3" type="submit">Ajouter un reçu</button>
-            </form>
-          </div>
         </section>
       )}
 

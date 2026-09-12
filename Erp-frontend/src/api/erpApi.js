@@ -24,7 +24,13 @@ export const getAllTeachers = () => axiosClient.get('/api-professeur/getAllProfe
 
 export const getAllPaiements = () => axiosClient.get('/api-paiement/getAllPaiements');
 
+export const getPaiementById = (id) => axiosClient.get(`/api-paiement/getPaiementById/${id}`);
+
 export const addPaiement = (payload) => axiosClient.post('/api-paiement/add-Paiement', payload);
+
+export const updatePaiement = (id, payload) => axiosClient.patch(`/api-paiement/update-Paiement/${id}`, payload);
+
+export const deletePaiement = (id) => axiosClient.delete(`/api-paiement/delete-Paiement/${id}`);
 
 export const addRecu = (payload) => axiosClient.post('/api-recu/add-Recu', payload);
 
