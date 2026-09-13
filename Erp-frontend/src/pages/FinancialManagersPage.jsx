@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { createTeacher, deleteTeacher, getAllTeachers, updateTeacher } from '../api/erpApi';
+import {
+  createFinancialManager,
+  deleteFinancialManager,
+  getAllFinancialManagers,
+  updateFinancialManager,
+} from '../api/erpApi';
 import DataTable from '../components/DataTable';
 import { useGlobalMessage } from '../utils/notifications';
 
@@ -9,29 +14,28 @@ const initialForm = {
   email: '',
   telephone: '',
   motDePasse: '',
-  specialite: '',
   estActif: true,
 };
 
-const TeachersPage = () => {
-  const [teachers, setTeachers] = useState([]);
+const FinancialManagersPage = () => {
+  const [managers, setManagers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [editingId, setEditingId] = useState(null);
-  const [pendingDeleteTeacher, setPendingDeleteTeacher] = useState(null);
+  const [pendingDeleteManager, setPendingDeleteManager] = useState(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useGlobalMessage('error');
   const [successMessage, setSuccessMessage] = useGlobalMessage('success');
 
-  const loadTeachers = async () => {
+  const loadManagers = async () => {
     try {
-      const { data } = await getAllTeachers();
-      setTeachers(Array.isArray(data) ? data : []);
+      const { data } = await getAllFinancialManagers();
+      setManagers(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Failed to load teachers:', error);
-      setErrorMessage('Impossible de charger les professeurs.');
+      console.error('Failed to load financial managers:', error);
+      setErrorMessage('Impossible de charger les responsables financiers.');
     } finally {
       setLoading(false);
     }
@@ -39,7 +43,7 @@ const TeachersPage = () => {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      loadTeachers();
+      loadManagers();
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -57,16 +61,15 @@ const TeachersPage = () => {
     setIsFormModalOpen(true);
   };
 
-  const openEditModal = (teacher) => {
-    setEditingId(teacher.id);
+  const openEditModal = (manager) => {
+    setEditingId(manager.id);
     setForm({
-      nom: teacher.nom || '',
-      prenom: teacher.prenom || '',
-      email: teacher.email || '',
-      telephone: teacher.telephone || '',
+      nom: manager.nom || '',
+      prenom: manager.prenom || '',
+      email: manager.email || '',
+      telephone: manager.telephone || '',
       motDePasse: '',
-      specialite: teacher.specialite || '',
-      estActif: Boolean(teacher.estActif),
+      estActif: Boolean(manager.estActif),
     });
     setErrorMessage('');
     setSuccessMessage('');
@@ -98,8 +101,7 @@ const TeachersPage = () => {
         prenom: form.prenom.trim(),
         email: form.email.trim(),
         telephone: form.telephone.trim(),
-        specialite: form.specialite.trim(),
-        role: 'PROFESSEUR',
+        role: 'RESPONSABLE_FINANCIER',
         estActif: Boolean(form.estActif),
       };
 
@@ -108,7 +110,7 @@ const TeachersPage = () => {
       }
 
       if (!editingId && !form.motDePasse) {
-        throw new Error('Le mot de passe est obligatoire pour un nouveau professeur.');
+        throw new Error('Le mot de passe est obligatoire pour un nouveau responsable financier.');
       }
 
       if (form.motDePasse) {
@@ -116,44 +118,44 @@ const TeachersPage = () => {
       }
 
       if (editingId) {
-        await updateTeacher(editingId, payload);
-        setSuccessMessage('Professeur modifié avec succès.');
+        await updateFinancialManager(editingId, payload);
+        setSuccessMessage('Responsable financier modifié avec succès.');
       } else {
-        await createTeacher(payload);
-        setSuccessMessage('Professeur ajouté avec succès.');
+        await createFinancialManager(payload);
+        setSuccessMessage('Responsable financier ajouté avec succès.');
       }
 
       closeFormModal();
-      await loadTeachers();
+      await loadManagers();
     } catch (error) {
-      console.error('Failed to save teacher:', error);
-      setErrorMessage(error.response?.data?.message || error.message || 'Impossible d’enregistrer le professeur.');
+      console.error('Failed to save financial manager:', error);
+      setErrorMessage(error.response?.data?.message || error.message || 'Impossible d’enregistrer le responsable financier.');
     } finally {
       setSaving(false);
     }
   };
 
-  const openDeleteModal = (teacher) => {
-    setPendingDeleteTeacher(teacher);
+  const openDeleteModal = (manager) => {
+    setPendingDeleteManager(manager);
     setIsDeleteModalOpen(true);
   };
 
   const closeDeleteModal = () => {
-    setPendingDeleteTeacher(null);
+    setPendingDeleteManager(null);
     setIsDeleteModalOpen(false);
   };
 
   const handleDelete = async () => {
-    if (!pendingDeleteTeacher) return;
+    if (!pendingDeleteManager) return;
 
     try {
-      await deleteTeacher(pendingDeleteTeacher.id);
+      await deleteFinancialManager(pendingDeleteManager.id);
       closeDeleteModal();
-      setSuccessMessage('Professeur supprimé avec succès.');
-      await loadTeachers();
+      setSuccessMessage('Responsable financier supprimé avec succès.');
+      await loadManagers();
     } catch (error) {
-      console.error('Failed to delete teacher:', error);
-      setErrorMessage(error.response?.data?.message || 'Impossible de supprimer le professeur.');
+      console.error('Failed to delete financial manager:', error);
+      setErrorMessage(error.response?.data?.message || 'Impossible de supprimer le responsable financier.');
       closeDeleteModal();
     }
   };
@@ -163,7 +165,6 @@ const TeachersPage = () => {
     { key: 'prenom', label: 'Prénom' },
     { key: 'email', label: 'Email' },
     { key: 'telephone', label: 'Téléphone' },
-    { key: 'specialite', label: 'Spécialité' },
     {
       key: 'estActif',
       label: 'Statut',
@@ -194,21 +195,21 @@ const TeachersPage = () => {
       <div className={`page-shell ${isFormModalOpen || isDeleteModalOpen ? 'page-blur' : ''}`}>
         <header className="page-header">
           <div className="page-title-row">
-            <h1>Professeurs</h1>
+            <h1>Responsables financiers</h1>
             <button className="btn btn-primary" type="button" onClick={openCreateModal}>
-              Ajouter un professeur
+              Ajouter un responsable financier
             </button>
           </div>
-          <p className="page-subtitle">Gérez les professeurs, leurs spécialités et leurs accès.</p>
+          <p className="page-subtitle">Gérez les utilisateurs responsables de la gestion financière.</p>
         </header>
 
         {errorMessage && !isFormModalOpen && !isDeleteModalOpen && <div className="alert alert-danger">{errorMessage}</div>}
         {successMessage && <div className="alert alert-success">{successMessage}</div>}
 
         {loading ? (
-          <div className="app-card rounded-card p-4 text-center">Chargement des professeurs...</div>
+          <div className="app-card rounded-card p-4 text-center">Chargement des responsables financiers...</div>
         ) : (
-          <DataTable columns={columns} rows={teachers} emptyMessage="Aucun professeur trouvé." />
+          <DataTable columns={columns} rows={managers} emptyMessage="Aucun responsable financier trouvé." />
         )}
       </div>
 
@@ -216,16 +217,16 @@ const TeachersPage = () => {
         <div className="student-modal-backdrop" onClick={closeFormModal}>
           <div className="student-modal student-modal-shell" onClick={(event) => event.stopPropagation()}>
             <div className="student-modal-visual">
-              <div className="student-modal-visual-badge">VPI • Gestion scolaire</div>
-              <h4>{editingId ? 'Modifier un professeur' : 'Ajouter un professeur'}</h4>
-              <p>Renseignez les informations du professeur et sa spécialité.</p>
+              <div className="student-modal-visual-badge">VPI • Finance</div>
+              <h4>{editingId ? 'Modifier un responsable financier' : 'Ajouter un responsable financier'}</h4>
+              <p>Renseignez les informations et les accès du responsable financier.</p>
             </div>
 
             <div className="student-modal-panel">
               <div className="student-modal-header">
                 <div>
-                  <small className="student-modal-kicker">Fiche professeur</small>
-                  <h3>{editingId ? 'Modifier les informations' : 'Créer un nouveau professeur'}</h3>
+                  <small className="student-modal-kicker">Fiche finance</small>
+                  <h3>{editingId ? 'Modifier les informations' : 'Créer un nouveau responsable'}</h3>
                 </div>
                 <button className="btn-close" type="button" onClick={closeFormModal} aria-label="Fermer" />
               </div>
@@ -250,17 +251,13 @@ const TeachersPage = () => {
                       <input className="form-control" name="telephone" value={form.telephone} onChange={handleChange} />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label">Spécialité</label>
-                      <input className="form-control" name="specialite" value={form.specialite} onChange={handleChange} placeholder="Ex. Mathématiques" />
-                    </div>
-                    <div className="col-md-6">
                       <label className="form-label">Mot de passe</label>
                       <input className="form-control" type="password" name="motDePasse" value={form.motDePasse} onChange={handleChange} placeholder={editingId ? 'Laisser vide pour conserver' : 'Obligatoire'} />
                     </div>
                     <div className="col-12 student-toggle-wrap">
                       <div className="form-check">
-                        <input className="form-check-input" type="checkbox" name="estActif" id="teacherActive" checked={form.estActif} onChange={handleChange} />
-                        <label className="form-check-label" htmlFor="teacherActive">Professeur actif</label>
+                        <input className="form-check-input" type="checkbox" name="estActif" id="financialManagerActive" checked={form.estActif} onChange={handleChange} />
+                        <label className="form-check-label" htmlFor="financialManagerActive">Responsable actif</label>
                       </div>
                     </div>
                   </div>
@@ -270,7 +267,7 @@ const TeachersPage = () => {
                   <div className="student-modal-actions">
                     <button className="btn btn-outline-secondary" type="button" onClick={closeFormModal}>Annuler</button>
                     <button className="btn btn-primary" type="submit" disabled={saving}>
-                      {saving ? 'Enregistrement...' : editingId ? 'Enregistrer les modifications' : 'Ajouter le professeur'}
+                      {saving ? 'Enregistrement...' : editingId ? 'Enregistrer les modifications' : 'Ajouter le responsable'}
                     </button>
                   </div>
                 </form>
@@ -280,7 +277,7 @@ const TeachersPage = () => {
         </div>
       )}
 
-      {isDeleteModalOpen && pendingDeleteTeacher && (
+      {isDeleteModalOpen && pendingDeleteManager && (
         <div className="student-modal-backdrop" onClick={closeDeleteModal}>
           <div className="student-modal confirm-modal" onClick={(event) => event.stopPropagation()}>
             <div className="student-modal-header">
@@ -289,7 +286,7 @@ const TeachersPage = () => {
             </div>
             <div className="student-modal-body">
               <p className="mb-3">
-                Êtes-vous sûr de vouloir supprimer le professeur <strong>{pendingDeleteTeacher.prenom} {pendingDeleteTeacher.nom}</strong> ?
+                Êtes-vous sûr de vouloir supprimer <strong>{pendingDeleteManager.prenom} {pendingDeleteManager.nom}</strong> ?
               </p>
               <div className="student-modal-actions">
                 <button className="btn btn-outline-secondary" type="button" onClick={closeDeleteModal}>Annuler</button>
@@ -303,4 +300,4 @@ const TeachersPage = () => {
   );
 };
 
-export default TeachersPage;
+export default FinancialManagersPage;

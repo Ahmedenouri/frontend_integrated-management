@@ -8,6 +8,7 @@ import {
   updateUser,
 } from '../api/erpApi';
 import DataTable from '../components/DataTable';
+import { useGlobalMessage } from '../utils/notifications';
 
 const initialForm = {
   nom: '',
@@ -87,8 +88,9 @@ const UsersPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [errorMessage, setErrorMessage] = useGlobalMessage('error');
+  const [successMessage, setSuccessMessage] = useGlobalMessage('success');
   const [selectedUser, setSelectedUser] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -113,7 +115,12 @@ const UsersPage = () => {
   };
 
   useEffect(() => {
-    loadUsers();
+    const timer = window.setTimeout(() => {
+      loadUsers();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const resetForm = () => {
@@ -294,6 +301,11 @@ const UsersPage = () => {
 
   const filteredUsers = users.filter((user) => {
     const term = searchTerm.trim().toLowerCase();
+    const matchesRole = !roleFilter || normalizeRoleValue(user.role) === roleFilter;
+
+    if (!matchesRole) {
+      return false;
+    }
 
     if (!term) {
       return true;
@@ -384,6 +396,16 @@ const UsersPage = () => {
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
+            </div>
+            <div className="w-100 w-md-25">
+              <label className="form-label">Filtrer par rôle</label>
+              <select className="form-select" value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
+                <option value="">Tous les rôles</option>
+                <option value="ETUDIANT">Étudiant</option>
+                <option value="SURVEILLANT">Surveillant</option>
+                <option value="RESPONSABLE_FINANCIER">Responsable financier</option>
+                <option value="PROFESSEUR">Professeur</option>
+              </select>
             </div>
           </div>
 

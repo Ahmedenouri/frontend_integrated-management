@@ -11,6 +11,7 @@ import {
 } from '../api/erpApi';
 import DataTable from '../components/DataTable';
 import { useAuth } from '../context/AuthContext';
+import { useGlobalMessage } from '../utils/notifications';
 
 const initialPaymentForm = {
   referencePaiement: '',
@@ -102,7 +103,7 @@ const FinancePage = () => {
   const [receiptLoading, setReceiptLoading] = useState(false);
   const [formData, setFormData] = useState(initialPaymentForm);
   const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useGlobalMessage('error');
 
   const loadFinance = async () => {
     try {

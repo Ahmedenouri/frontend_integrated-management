@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -6,6 +6,23 @@ const Navbar = () => {
   const { userProfile, userRole, logout } = useAuth();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [notification, setNotification] = useState(null);
+
+  useEffect(() => {
+    const handleNotification = (event) => {
+      setNotification(event.detail);
+    };
+
+    window.addEventListener('app-notification', handleNotification);
+    return () => window.removeEventListener('app-notification', handleNotification);
+  }, []);
+
+  useEffect(() => {
+    if (!notification) return undefined;
+
+    const timer = window.setTimeout(() => setNotification(null), 4500);
+    return () => window.clearTimeout(timer);
+  }, [notification]);
 
   const fullName =
     userProfile?.fullName ||
@@ -42,6 +59,16 @@ const Navbar = () => {
             <small>Système de gestion scolaire</small>
           </div>
         </div>
+
+        {notification && (
+          <div className={`navbar-notification ${notification.type}`} role="status">
+            <i className={`bi ${notification.type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'}`} />
+            <span>{notification.message}</span>
+            <button type="button" onClick={() => setNotification(null)} aria-label="Fermer le message">
+              <i className="bi bi-x" />
+            </button>
+          </div>
+        )}
 
         <div className="navbar-actions">
           <div className="user-dropdown">

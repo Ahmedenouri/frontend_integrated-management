@@ -21,6 +21,7 @@ import {
   getMesSeances,
 } from '../api/erpApi';
 import { useAuth } from '../context/AuthContext';
+import { useGlobalMessage } from '../utils/notifications';
 
 const initialPaymentForm = {
   referencePaiement: '',
@@ -92,7 +93,7 @@ const Dashboard = () => {
   const [noteRows, setNoteRows] = useState([]);
   const [classAssignments, setClassAssignments] = useState([]);
   const [studentAssignments, setStudentAssignments] = useState([]);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useGlobalMessage('success');
   const [paymentForm, setPaymentForm] = useState(initialPaymentForm);
   const [receiptForm, setReceiptForm] = useState(initialReceiptForm);
   const [sanctionForm, setSanctionForm] = useState(initialSanctionForm);

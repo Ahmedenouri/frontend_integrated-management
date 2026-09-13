@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { changePassword, getProfile, updateProfile } from '../api/erpApi';
+import { useGlobalMessage } from '../utils/notifications';
 
 const initialProfileForm = {
   nom: '',
@@ -18,8 +19,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [profileForm, setProfileForm] = useState(initialProfileForm);
   const [passwordForm, setPasswordForm] = useState(initialPasswordForm);
-  const [profileMessage, setProfileMessage] = useState('');
-  const [passwordMessage, setPasswordMessage] = useState('');
+  const [profileMessage, setProfileMessage] = useGlobalMessage('success');
+  const [passwordMessage, setPasswordMessage] = useGlobalMessage('success');
 
   const loadProfile = async () => {
     try {

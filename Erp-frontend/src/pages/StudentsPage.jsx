@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { createStudent, deleteStudent, getAllStudents, getStudentById, updateStudent } from '../api/erpApi';
+import { createStudent, deleteStudent, getAllClasses, getAllStudents, getStudentById, updateStudent } from '../api/erpApi';
 import DataTable from '../components/DataTable';
+import { useGlobalMessage } from '../utils/notifications';
 
 const initialForm = {
   nom: '',
@@ -40,9 +41,10 @@ const StudentsPage = () => {
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState(initialForm);
+  const [classes, setClasses] = useState([]);
   const [editingId, setEditingId] = useState(null);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useGlobalMessage('error');
+  const [successMessage, setSuccessMessage] = useGlobalMessage('success');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -52,8 +54,13 @@ const StudentsPage = () => {
 
   const loadStudents = async () => {
     try {
-      const { data } = await getAllStudents();
-      setStudents(Array.isArray(data) ? data : []);
+      const [studentsResult, classesResult] = await Promise.allSettled([getAllStudents(), getAllClasses()]);
+      if (studentsResult.status === 'fulfilled') {
+        setStudents(Array.isArray(studentsResult.value.data) ? studentsResult.value.data : []);
+      }
+      if (classesResult.status === 'fulfilled') {
+        setClasses(Array.isArray(classesResult.value.data) ? classesResult.value.data : []);
+      }
     } catch (error) {
       console.error('Failed to load students:', error);
       setErrorMessage('Impossible de charger les étudiants.');
@@ -63,7 +70,11 @@ const StudentsPage = () => {
   };
 
   useEffect(() => {
-    loadStudents();
+    const timer = window.setTimeout(() => {
+      loadStudents();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   const resetForm = () => {
@@ -360,8 +371,16 @@ const StudentsPage = () => {
                       <input className="form-control" type="email" name="emailParent" value={form.emailParent} onChange={handleChange} />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label">Classe ID</label>
-                      <input className="form-control" type="number" name="classeId" value={form.classeId} onChange={handleChange} />
+                      <label className="form-label">Classe</label>
+                      <select className="form-select" name="classeId" value={form.classeId} onChange={handleChange}>
+                        <option value="">Choisir une classe</option>
+                        {classes.map((classItem) => (
+                          <option key={classItem.id} value={classItem.id}>
+                            {classItem.nom || `Classe ${classItem.id}`}
+                            {classItem.niveau ? ` - ${classItem.niveau}` : ''}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div className="col-md-6">
                       <label className="form-label">Rôle</label>
@@ -508,8 +527,12 @@ const StudentsPage = () => {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label">Classe ID</label>
-                  <div className="form-control bg-light border-0">{selectedStudent.classeId ?? '—'}</div>
+                  <label className="form-label">Classe</label>
+                  <div className="form-control bg-light border-0">
+                    {classes.find((classItem) => String(classItem.id) === String(selectedStudent.classeId))?.nom
+                      || selectedStudent.classeId
+                      || '—'}
+                  </div>
                 </div>
 
                 <div className="col-md-6">

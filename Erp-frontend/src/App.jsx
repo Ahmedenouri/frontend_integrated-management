@@ -10,6 +10,7 @@ import ClassesPage from './pages/ClassesPage';
 import Dashboard from './pages/Dashboard';
 import EvaluationsPage from './pages/EvaluationsPage';
 import FinancePage from './pages/FinancePage';
+import FinancialManagersPage from './pages/FinancialManagersPage';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import SchedulePage from './pages/SchedulePage';
@@ -72,6 +73,14 @@ const AppLayout = () => {
               element={
                 <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR', 'ROLE_RESPONSABLE_FINANCIER']}>
                   <FinancePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/financial-managers"
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR']}>
+                  <FinancialManagersPage />
                 </ProtectedRoute>
               }
             />

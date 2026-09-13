@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createClass, deleteClass, getAllClasses, updateClass } from '../api/erpApi';
 import DataTable from '../components/DataTable';
+import { useGlobalMessage } from '../utils/notifications';
 
 const initialForm = {
   nom: '',
@@ -15,8 +16,8 @@ const ClassesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState(initialForm);
   const [editingId, setEditingId] = useState(null);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useGlobalMessage('error');
+  const [successMessage, setSuccessMessage] = useGlobalMessage('success');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [pendingDeleteClass, setPendingDeleteClass] = useState(null);

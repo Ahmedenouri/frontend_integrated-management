@@ -87,9 +87,23 @@ export const deleteStudent = (id) => axiosClient.delete(`/api-etudiant/delete-Et
 
 export const getAllTeachers = () => axiosClient.get('/api-professeur/getAllProfesseurs');
 
+export const createTeacher = (payload) => axiosClient.post('/api-professeur/add-Professeur', payload);
+
+export const updateTeacher = (id, payload) => axiosClient.patch(`/api-professeur/update-Professeur/${id}`, payload);
+
+export const deleteTeacher = (id) => axiosClient.delete(`/api-professeur/delete-Professeur/${id}`);
+
 export const getAllSurveillants = () => axiosClient.get('/api-surveillant/getAllSurveillants');
 
 export const getAllPaiements = () => axiosClient.get('/api-paiement/getAllPaiements');
+
+export const getAllFinancialManagers = () => axiosClient.get('/api-responsable-financier/getAllResponsablesFinanciers');
+
+export const createFinancialManager = (payload) => axiosClient.post('/api-responsable-financier/add-ResponsableFinancier', payload);
+
+export const updateFinancialManager = (id, payload) => axiosClient.patch(`/api-responsable-financier/update-ResponsableFinancier/${id}`, payload);
+
+export const deleteFinancialManager = (id) => axiosClient.delete(`/api-responsable-financier/delete-ResponsableFinancier/${id}`);
 
 export const getPaiementById = (id) => axiosClient.get(`/api-paiement/getPaiementById/${id}`);
 
@@ -102,6 +116,12 @@ export const deletePaiement = (id) => axiosClient.delete(`/api-paiement/delete-P
 export const addRecu = (payload) => axiosClient.post('/api-recu/add-Recu', payload);
 
 export const addSanction = (payload) => axiosClient.post('/api-sanction/add-Sanction', payload);
+
+export const getAllSanctions = () => axiosClient.get('/api-sanction/getAllSanctions');
+
+export const updateSanction = (id, payload) => axiosClient.patch(`/api-sanction/update-Sanction/${id}`, payload);
+
+export const deleteSanction = (id) => axiosClient.delete(`/api-sanction/delete-Sanction/${id}`);
 
 export const addNote = (payload) => axiosClient.post('/api-note/add-Note', payload);
 
@@ -147,7 +167,21 @@ export const deleteEvaluation = (id) => axiosClient.delete(`/api-evaluation/dele
 
 export const getAllEmploisDuTemps = () => axiosClient.get('/api-emploi-du-temps/getAllEmploisDuTemps');
 
+export const createEmploiDuTemps = (payload) => axiosClient.post('/api-emploi-du-temps/add-EmploiDuTemps', payload);
+
+export const updateEmploiDuTemps = (id, payload) => axiosClient.patch(`/api-emploi-du-temps/update-EmploiDuTemps/${id}`, payload);
+
+export const deleteEmploiDuTemps = (id) => axiosClient.delete(`/api-emploi-du-temps/delete-EmploiDuTemps/${id}`);
+
 export const getMonEmploiDuTemps = () => axiosClient.get('/api-emploi-du-temps/mon-emploi');
+
+export const createSeance = (payload) => axiosClient.post('/api-seance/add-Seance', payload);
+
+export const updateSeance = (id, payload) => axiosClient.patch(`/api-seance/update-Seance/${id}`, payload);
+
+export const deleteSeance = (id) => axiosClient.delete(`/api-seance/delete-Seance/${id}`);
+
+export const getAllSalles = () => axiosClient.get('/api-salle/getAllSalles');
 
 export const getAllBulletins = () => axiosClient.get('/api-bulletin/getAllBulletins');
 
