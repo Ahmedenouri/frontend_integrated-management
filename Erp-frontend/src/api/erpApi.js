@@ -87,6 +87,8 @@ export const deleteStudent = (id) => axiosClient.delete(`/api-etudiant/delete-Et
 
 export const getAllTeachers = () => axiosClient.get('/api-professeur/getAllProfesseurs');
 
+export const getAllSurveillants = () => axiosClient.get('/api-surveillant/getAllSurveillants');
+
 export const getAllPaiements = () => axiosClient.get('/api-paiement/getAllPaiements');
 
 export const getPaiementById = (id) => axiosClient.get(`/api-paiement/getPaiementById/${id}`);
@@ -104,6 +106,12 @@ export const addSanction = (payload) => axiosClient.post('/api-sanction/add-Sanc
 export const addNote = (payload) => axiosClient.post('/api-note/add-Note', payload);
 
 export const getAllAbsences = () => axiosClient.get('/api-absence/getAllAbsences');
+
+export const createAbsence = (payload) => axiosClient.post('/api-absence/add-Absence', payload);
+
+export const updateAbsence = (id, payload) => axiosClient.patch(`/api-absence/update-Absence/${id}`, payload);
+
+export const deleteAbsence = (id) => axiosClient.delete(`/api-absence/delete-Absence/${id}`);
 
 export const getMesAbsences = () => axiosClient.get('/api-absence/mes-absences');
 

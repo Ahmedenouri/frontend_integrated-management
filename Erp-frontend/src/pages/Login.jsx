@@ -112,9 +112,7 @@ const Login = () => {
                   <span>Se souvenir de moi</span>
                 </label>
 
-                <a className="auth-link" href="#">
-                  Mot de passe oublié ?
-                </a>
+                
               </div>
 
               <button className="btn btn-primary w-100" type="submit" disabled={loading}>
