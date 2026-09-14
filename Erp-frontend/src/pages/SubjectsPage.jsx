@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
-import { createMatiere, deleteMatiere, getAllMatieres, updateMatiere } from '../api/erpApi';
+import {
+  createMatiere,
+  deleteMatiere,
+  getAllClasses,
+  getAllMatieres,
+  getMesClasses,
+  getMesSeances,
+  getMonEmploiDuTemps,
+  updateMatiere,
+} from '../api/erpApi';
 import DataTable from '../components/DataTable';
+import { useAuth } from '../context/AuthContext';
 import { useGlobalMessage } from '../utils/notifications';
 
 const initialForm = {
@@ -11,7 +21,11 @@ const initialForm = {
 };
 
 const SubjectsPage = () => {
+  const { userRole } = useAuth();
+  const isProfessor = userRole === 'ROLE_PROFESSEUR';
   const [subjects, setSubjects] = useState([]);
+  const [assignedSubjects, setAssignedSubjects] = useState([]);
+  const [assignedLoading, setAssignedLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,6 +39,54 @@ const SubjectsPage = () => {
 
   const loadSubjects = async () => {
     try {
+      if (isProfessor) {
+        const [subjectsResult, sessionsResult, timetablesResult, classesResult, assignmentsResult] = await Promise.allSettled([
+          getAllMatieres(),
+          getMesSeances(),
+          getMonEmploiDuTemps(),
+          getAllClasses(),
+          getMesClasses(),
+        ]);
+        const allSubjects = subjectsResult.status === 'fulfilled' && Array.isArray(subjectsResult.value.data) ? subjectsResult.value.data : [];
+        const sessions = sessionsResult.status === 'fulfilled' && Array.isArray(sessionsResult.value.data) ? sessionsResult.value.data : [];
+        const timetables = timetablesResult.status === 'fulfilled' ? (Array.isArray(timetablesResult.value.data) ? timetablesResult.value.data : [timetablesResult.value.data]) : [];
+        const classes = classesResult.status === 'fulfilled' && Array.isArray(classesResult.value.data) ? classesResult.value.data : [];
+        const assignments = assignmentsResult.status === 'fulfilled' && Array.isArray(assignmentsResult.value.data) ? assignmentsResult.value.data : [];
+        const timetableMap = new Map(timetables.map((item) => [String(item.id), item]));
+        const subjectMap = new Map(allSubjects.map((item) => [String(item.id), item]));
+        const grouped = new Map();
+
+        sessions.forEach((session) => {
+          const subject = subjectMap.get(String(session.matiereId));
+          if (!subject) return;
+          const timetable = timetableMap.get(String(session.emploiDuTempsId));
+          const classId = timetable?.classeId || session.classeId;
+          const classItem = classes.find((item) => String(item.id) === String(classId));
+          const key = String(subject.id);
+          const current = grouped.get(key) || { ...subject, assignedClasses: [], weeklyHours: 0 };
+          if (classItem && !current.assignedClasses.some((item) => String(item.id) === String(classItem.id))) current.assignedClasses.push(classItem);
+          current.weeklyHours += Number(subject.volumeHoraire || 0);
+          grouped.set(key, current);
+        });
+
+        assignments.forEach((assignment) => {
+          const subjectId = assignment.matiereId || assignment.matiere?.id;
+          const subject = subjectMap.get(String(subjectId)) || assignment.matiere;
+          if (!subject) return;
+          const current = grouped.get(String(subject.id)) || { ...subject, assignedClasses: [], weeklyHours: 0 };
+          const classId = assignment.classeId || assignment.classe?.id;
+          const classItem = classes.find((item) => String(item.id) === String(classId)) || assignment.classe;
+          if (classItem && !current.assignedClasses.some((item) => String(item.id) === String(classItem.id))) current.assignedClasses.push(classItem);
+          grouped.set(String(subject.id), current);
+        });
+
+        setAssignedSubjects([...grouped.values()].map((subject) => ({
+          ...subject,
+          weeklyHours: subject.weeklyHours || subject.volumeHoraire || 0,
+        })));
+        setAssignedLoading(false);
+        return;
+      }
       const { data } = await getAllMatieres();
       setSubjects(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -36,8 +98,13 @@ const SubjectsPage = () => {
   };
 
   useEffect(() => {
-    loadSubjects();
-  }, []);
+    const timer = window.setTimeout(() => {
+      loadSubjects();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isProfessor]);
 
   const resetForm = () => {
     setForm(initialForm);
@@ -150,6 +217,42 @@ const SubjectsPage = () => {
     return [subject.code, subject.intitule, subject.coefficient, subject.volumeHoraire]
       .some((value) => String(value ?? '').toLowerCase().includes(term));
   });
+
+  if (isProfessor) {
+    return (
+      <>
+        <header className="page-header">
+          <div className="page-title-row">
+            <h1>Mes matières assignées</h1>
+          </div>
+          <p className="page-subtitle">Les matières, classes, coefficients et volumes horaires qui vous sont affectés.</p>
+        </header>
+
+        {assignedLoading ? (
+          <div className="app-card rounded-card p-4 text-center">Chargement de vos matières...</div>
+        ) : assignedSubjects.length ? (
+          <section className="assigned-subject-grid">
+            {assignedSubjects.map((subject) => (
+              <article className="app-card rounded-card assigned-subject-card" key={subject.id}>
+                <div className="assigned-subject-card-header">
+                  <div className="assigned-subject-icon"><i className="bi bi-book-half" /></div>
+                  <span className="badge-soft primary">{subject.code || 'Module'}</span>
+                </div>
+                <h3>{subject.intitule || 'Matière sans intitulé'}</h3>
+                <div className="assigned-subject-details">
+                  <div><span>Classes affectées</span><strong>{subject.assignedClasses?.map((item) => item.nom || item.name).filter(Boolean).join(', ') || '—'}</strong></div>
+                  <div><span>Coefficient</span><strong>{subject.coefficient ?? '—'}</strong></div>
+                  <div><span>Volume horaire</span><strong>{subject.weeklyHours || subject.volumeHoraire || 0} h / semaine</strong></div>
+                </div>
+              </article>
+            ))}
+          </section>
+        ) : (
+          <div className="app-card rounded-card page-empty p-4 text-center text-muted">Aucune matière assignée pour le moment.</div>
+        )}
+      </>
+    );
+  }
 
   const columns = [
     { key: 'code', label: 'Code' },

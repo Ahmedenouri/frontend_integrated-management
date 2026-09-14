@@ -83,7 +83,25 @@ const SchedulePage = () => {
   }, [canManage]);
 
   const timetableById = useMemo(() => new Map(timetables.map((item) => [String(item.id), item])), [timetables]);
-  const displayedSessions = canManage ? sessions : sessions.filter((session) => timetableById.has(String(session.emploiDuTempsId)));
+  const displayedSessions = sessions;
+  const sessionsByDay = useMemo(
+    () => days.reduce((schedule, day) => {
+      schedule[day] = displayedSessions
+        .filter((session) => String(session.jour || '').toUpperCase() === day)
+        .sort((first, second) => String(first.heureDebut || '').localeCompare(String(second.heureDebut || '')));
+      return schedule;
+    }, {}),
+    [displayedSessions]
+  );
+
+  const getSessionDetails = (session) => {
+    const timetable = timetableById.get(String(session.emploiDuTempsId));
+    return {
+      classe: timetable ? findName(classes, timetable.classeId) : 'Classe non renseignée',
+      matiere: findName(subjects, session.matiereId),
+      salle: rooms.find((room) => String(room.id) === String(session.salleId))?.codeSalle || 'Salle non renseignée',
+    };
+  };
 
   const openCreateTimetable = () => {
     setEditingTimetableId(null);
@@ -179,6 +197,12 @@ const SchedulePage = () => {
     <header className="page-header"><div className="page-title-row"><h1>Emplois du temps</h1>{canManage && <button className="btn btn-primary" type="button" onClick={openCreateTimetable}>Créer un emploi du temps</button>}</div><p className="page-subtitle">Programmez les classes, semestres, jours, horaires, professeurs, matières et salles.</p></header>
     {loading ? <div className="app-card rounded-card p-4 text-center">Chargement des emplois du temps...</div> : <>
       {canManage && <DataTable columns={timetableColumns} rows={timetables} emptyMessage="Aucun emploi du temps trouvé." />}
+      {!canManage && <section className="personal-schedule mt-4" aria-label="Mon planning hebdomadaire">
+        <div className="personal-schedule-heading"><div><span className="eyebrow">Mon planning</span><h2>Mes séances de la semaine</h2></div><span className="personal-schedule-count">{displayedSessions.length} séance{displayedSessions.length === 1 ? '' : 's'}</span></div>
+        <div className="personal-schedule-grid">
+          {days.map((day) => <div className="personal-schedule-day" key={day}><h3>{day}</h3>{sessionsByDay[day].length ? sessionsByDay[day].map((session) => { const details = getSessionDetails(session); return <article className="personal-schedule-session" key={session.id}><strong>{session.heureDebut || '—'} - {session.heureFin || '—'}</strong><span>{details.matiere}</span><small>{details.classe}</small><small>{details.salle}</small></article>; }) : <p className="personal-schedule-empty">Aucune séance</p>}</div>)}
+        </div>
+      </section>}
       <div className="mt-4"><div className="d-flex justify-content-between align-items-center mb-3"><h3>Séances programmées</h3>{canManage && <button className="btn btn-outline-primary" type="button" onClick={() => openCreateSession()}>Ajouter une séance</button>}</div><DataTable columns={sessionColumns} rows={displayedSessions} emptyMessage="Aucune séance programmée." /></div>
     </>}
 

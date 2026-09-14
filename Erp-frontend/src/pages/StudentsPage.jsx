@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { createStudent, deleteStudent, getAllClasses, getAllStudents, getStudentById, updateStudent } from '../api/erpApi';
+import { useLocation } from 'react-router-dom';
+import { createStudent, deleteStudent, getAllClasses, getAllStudents, getMesEtudiants, getStudentById, updateStudent } from '../api/erpApi';
 import DataTable from '../components/DataTable';
 import { useGlobalMessage } from '../utils/notifications';
 
@@ -36,6 +37,8 @@ const buildStudentFormValues = (student = {}) => ({
 });
 
 const StudentsPage = () => {
+  const location = useLocation();
+  const isProfessorStudentsView = location.pathname === '/my-students';
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -54,7 +57,8 @@ const StudentsPage = () => {
 
   const loadStudents = async () => {
     try {
-      const [studentsResult, classesResult] = await Promise.allSettled([getAllStudents(), getAllClasses()]);
+      const studentsRequest = isProfessorStudentsView ? getMesEtudiants() : getAllStudents();
+      const [studentsResult, classesResult] = await Promise.allSettled([studentsRequest, getAllClasses()]);
       if (studentsResult.status === 'fulfilled') {
         setStudents(Array.isArray(studentsResult.value.data) ? studentsResult.value.data : []);
       }
@@ -75,6 +79,7 @@ const StudentsPage = () => {
     }, 0);
 
     return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const resetForm = () => {
@@ -256,9 +261,11 @@ const StudentsPage = () => {
         <header className="page-header">
           <div className="page-title-row">
             <h1>Étudiants</h1>
-            <button className="btn btn-primary" type="button" onClick={openCreateModal}>
-              Ajouter un étudiant
-            </button>
+            {!isProfessorStudentsView && (
+              <button className="btn btn-primary" type="button" onClick={openCreateModal}>
+                Ajouter un étudiant
+              </button>
+            )}
           </div>
           <p className="page-subtitle">Gérez les étudiants, ajoutez, modifiez ou supprimez leurs dossiers.</p>
         </header>

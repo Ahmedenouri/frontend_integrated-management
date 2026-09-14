@@ -1,0 +1,216 @@
+/* Shared cards, forms, tables, buttons, and modal finishing rules. */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  box-shadow: var(--vpi-focus-ring);
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.personal-schedule {
+  padding: 1.25rem;
+  border: 1px solid var(--vpi-border);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, #f8fbff, #ffffff 55%, #f4f8f5);
+}
+
+.personal-schedule-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.personal-schedule-heading h2 {
+  margin: 0.2rem 0 0;
+  color: var(--vpi-text);
+  font-size: 1.35rem;
+}
+
+.personal-schedule-count {
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(29, 78, 216, 0.1);
+  color: var(--vpi-indigo);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.personal-schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
+  gap: 0.75rem;
+  overflow-x: auto;
+}
+
+.personal-schedule-day {
+  min-height: 10rem;
+  padding: 0.8rem;
+  border: 1px solid var(--vpi-border);
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.personal-schedule-day h3 {
+  margin: 0 0 0.7rem;
+  color: var(--vpi-text);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.personal-schedule-session {
+  display: grid;
+  gap: 0.2rem;
+  margin-bottom: 0.55rem;
+  padding: 0.65rem;
+  border-left: 3px solid var(--vpi-indigo);
+  border-radius: 0.35rem;
+  background: #eef4ff;
+}
+
+.personal-schedule-session strong {
+  color: var(--vpi-indigo);
+  font-size: 0.78rem;
+}
+
+.personal-schedule-session span,
+.personal-schedule-session small {
+  color: var(--vpi-text);
+  font-size: 0.76rem;
+}
+
+.personal-schedule-session small {
+  color: var(--vpi-muted);
+}
+
+.personal-schedule-empty {
+  margin: 0;
+  color: var(--vpi-muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 900px) {
+  .personal-schedule-grid {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 576px) {
+  .personal-schedule-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .personal-schedule-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.assigned-subject-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.assigned-subject-card {
+  padding: 1.25rem;
+}
+
+.assigned-subject-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.assigned-subject-icon {
+  display: grid;
+  width: 2.8rem;
+  height: 2.8rem;
+  place-items: center;
+  border-radius: 0.85rem;
+  background: rgba(29, 78, 216, 0.1);
+  color: var(--vpi-indigo);
+  font-size: 1.2rem;
+}
+
+.assigned-subject-card h3 {
+  margin: 1rem 0;
+  font-size: 1.2rem;
+}
+
+.assigned-subject-details {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.assigned-subject-details div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--vpi-border);
+}
+
+.assigned-subject-details span {
+  color: var(--vpi-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.assigned-subject-details strong {
+  color: var(--vpi-text);
+  font-size: 0.9rem;
+}
+
+.notes-entry-panel {
+  width: min(1100px, 100%);
+  max-height: calc(100vh - 3rem);
+  overflow: auto;
+  border-radius: var(--radius-xl);
+  background: #fff;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.28);
+}
+
+.notes-entry-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 1.75rem;
+  color: #fff;
+  background: linear-gradient(135deg, #1d4ed8, #0e7490);
+}
+
+.notes-entry-header small { text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.75; }
+.notes-entry-header h2 { margin: 0.3rem 0; }
+.notes-entry-header p { margin: 0; opacity: 0.82; }
+.notes-entry-body { padding: 1.5rem 1.75rem; }
+.notes-student-summary { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 0.4rem 0.8rem; padding: 1rem; margin-bottom: 1.5rem; border-radius: 0.85rem; background: #eff6ff; }
+.notes-student-summary span { color: #64748b; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; }
+.notes-form { padding: 1.25rem; border-radius: 0.9rem; background: #eff6ff; border: 1px solid #bfdbfe; }
+.notes-form h4 { margin-bottom: 1rem; color: #1e3a8a; }
+
+@media (max-width: 767.98px) {
+  .notes-student-summary { grid-template-columns: 1fr; }
+  .notes-entry-panel { max-height: calc(100vh - 1.5rem); }
+}
+
+.student-modal-actions {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 575.98px) {
+  .student-modal-backdrop {
+    padding: 0.75rem;
+  }
+
+  .student-modal-actions .btn {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}

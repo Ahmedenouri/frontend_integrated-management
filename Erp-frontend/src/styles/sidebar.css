@@ -1,0 +1,27 @@
+/* Sidebar group and navigation presentation. */
+.sidebar-group-toggle {
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.sidebar-group-toggle:focus-visible,
+.sidebar .nav-link:focus-visible {
+  outline: 2px solid var(--vpi-blue);
+  outline-offset: 2px;
+}
+
+.sidebar .nav-link {
+  min-width: 0;
+}
+
+.sidebar .nav-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 991.98px) {
+  .sidebar-group-toggle {
+    min-height: 42px;
+  }
+}

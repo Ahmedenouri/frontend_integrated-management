@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import axiosClient from '../api/axiosClient';
 import {
   addPaiement,
+  createStudent,
   deletePaiement,
   getAllClasses,
+  getAllFinancialManagers,
   getAllPaiements,
   getAllStudents,
   getDashboardFinancier,
@@ -22,6 +24,15 @@ const initialPaymentForm = {
   statut: 'PAYE',
   etudiantId: '',
   responsableFinancierId: '',
+};
+
+const initialStudentForm = {
+  nom: '',
+  prenom: '',
+  email: '',
+  motDePasse: '',
+  telephone: '',
+  classeId: '',
 };
 
 const formatDate = (value) => {
@@ -67,6 +78,19 @@ const getStudentClassLabel = (student, classes = []) => {
   return student?.classeNom || student?.classeName || student?.className || student?.classeId || '—';
 };
 
+const getStudentClassId = (student) => {
+  if (student?.classeId !== undefined && student?.classeId !== null) return student.classeId;
+  if (typeof student?.classe === 'object') return student.classe?.id;
+  return student?.classe;
+};
+
+const getStudentLevel = (student, classes = []) => (
+  student?.niveau
+  || student?.niveauEtude
+  || classes.find((item) => String(item.id) === String(getStudentClassId(student)))?.niveau
+  || ''
+);
+
 const generateUniquePaymentReference = (existingPaiements = []) => {
   const usedReferences = new Set(
     existingPaiements
@@ -84,13 +108,19 @@ const generateUniquePaymentReference = (existingPaiements = []) => {
 };
 
 const FinancePage = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, userRole } = useAuth();
   const [stats, setStats] = useState(null);
   const [paiements, setPaiements] = useState([]);
   const [students, setStudents] = useState([]);
   const [classes, setClasses] = useState([]);
+  const [financialManagers, setFinancialManagers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('');
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [paymentClassId, setPaymentClassId] = useState('');
+  const [paymentLevel, setPaymentLevel] = useState('');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -102,16 +132,69 @@ const FinancePage = () => {
   const [receiptPdfUrl, setReceiptPdfUrl] = useState('');
   const [receiptLoading, setReceiptLoading] = useState(false);
   const [formData, setFormData] = useState(initialPaymentForm);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [isStudentFormOpen, setIsStudentFormOpen] = useState(false);
+  const [studentForm, setStudentForm] = useState(initialStudentForm);
+  const [studentSaving, setStudentSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useGlobalMessage('error');
 
+  const paymentClassStudents = students.filter((student) => String(getStudentClassId(student)) === String(paymentClassId));
+  const paymentLevels = [...new Set(paymentClassStudents.map((student) => getStudentLevel(student, classes)).filter(Boolean))];
+  const paymentStudents = paymentClassStudents.filter((student) => !paymentLevel || getStudentLevel(student, classes) === paymentLevel);
+
+  const openStudentForm = () => {
+    setStudentForm(initialStudentForm);
+    setErrorMessage('');
+    setIsStudentFormOpen(true);
+  };
+
+  const closeStudentForm = () => {
+    setIsStudentFormOpen(false);
+    setStudentForm(initialStudentForm);
+  };
+
+  const handleStudentSubmit = async (event) => {
+    event.preventDefault();
+    setStudentSaving(true);
+    setErrorMessage('');
+
+    try {
+      if (!studentForm.nom.trim() || !studentForm.prenom.trim() || !studentForm.email.trim() || !studentForm.motDePasse) {
+        throw new Error('Nom, prénom, email et mot de passe sont obligatoires.');
+      }
+
+      const { data } = await createStudent({
+        ...studentForm,
+        nom: studentForm.nom.trim(),
+        prenom: studentForm.prenom.trim(),
+        email: studentForm.email.trim(),
+        role: 'ETUDIANT',
+        estActif: true,
+        classeId: studentForm.classeId ? Number(studentForm.classeId) : undefined,
+      });
+      const createdStudent = data || { ...studentForm, id: data?.id };
+      setStudents((current) => [...current, createdStudent]);
+      setFormData((current) => ({ ...current, etudiantId: String(createdStudent.id) }));
+      setPaymentClassId(String(getStudentClassId(createdStudent) || studentForm.classeId || ''));
+      setPaymentLevel(getStudentLevel(createdStudent, classes));
+      closeStudentForm();
+      setSuccessMessage('Étudiant ajouté. Vous pouvez maintenant enregistrer le paiement.');
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || error.message || 'Impossible d’ajouter l’étudiant.');
+    } finally {
+      setStudentSaving(false);
+    }
+  };
+
   const loadFinance = async () => {
     try {
-      const [{ data: financeData }, { data: paiementsData }, { data: studentsData }, { data: classesData }] = await Promise.all([
+      const [{ data: financeData }, { data: paiementsData }, { data: studentsData }, { data: classesData }, financialManagersResult] = await Promise.all([
         getDashboardFinancier(),
         getAllPaiements(),
         getAllStudents(),
         getAllClasses(),
+        getAllFinancialManagers().catch(() => ({ data: [] })),
       ]);
 
       const studentMap = new Map(
@@ -141,6 +224,7 @@ const FinancePage = () => {
       setStats(financeData || {});
       setStudents(Array.isArray(studentsData) ? studentsData : []);
       setClasses(classList);
+      setFinancialManagers(Array.isArray(financialManagersResult.data) ? financialManagersResult.data : []);
       setPaiements(enrichedPaiements);
     } catch (error) {
       console.error('Failed to load finance data:', error);
@@ -191,6 +275,28 @@ const FinancePage = () => {
     enAttente: paiements.filter((paiement) => paiement.statut === 'EN_ATTENTE').length,
   }), [paiements]);
 
+  const selectedClass = classes.find((classItem) => String(classItem.id) === String(selectedClassId));
+  const classStudents = students.filter((student) => String(getStudentClassId(student)) === String(selectedClassId));
+  const levels = [...new Set(classStudents.map((student) => student.niveau || student.niveauEtude || selectedClass?.niveau).filter(Boolean))];
+  const filteredStudents = students.filter((student) => {
+    const studentClassId = getStudentClassId(student);
+    const studentLevel = student.niveau || student.niveauEtude || classes.find((item) => String(item.id) === String(studentClassId))?.niveau;
+    return (!selectedClassId || String(studentClassId) === String(selectedClassId))
+      && (!selectedLevel || studentLevel === selectedLevel)
+      && (!selectedStudentId || String(student.id) === String(selectedStudentId));
+  });
+  const paymentByStudent = new Map();
+  paiements.forEach((paiement) => {
+    const key = String(paiement.etudiantId);
+    paymentByStudent.set(key, [...(paymentByStudent.get(key) || []), paiement]);
+  });
+  const studentFinanceRows = filteredStudents.map((student) => {
+    const studentPayments = paymentByStudent.get(String(student.id)) || [];
+    const paid = studentPayments.some((paiement) => paiement.statut === 'PAYE');
+    const status = !studentPayments.length ? 'NON_INSCRIT' : paid ? 'PAYE' : 'IMPAYE';
+    return { ...student, studentPayments, status };
+  });
+
   const openCreateModal = () => {
     setEditingPaiement(null);
     setErrorMessage('');
@@ -199,6 +305,9 @@ const FinancePage = () => {
       referencePaiement: generateUniquePaymentReference(paiements),
       responsableFinancierId: userProfile?.id ? String(userProfile.id) : '',
     });
+    setPaymentConfirmed(false);
+    setPaymentClassId('');
+    setPaymentLevel('');
     setIsFormModalOpen(true);
   };
 
@@ -215,6 +324,10 @@ const FinancePage = () => {
       etudiantId: paiement.etudiantId ? String(paiement.etudiantId) : '',
       responsableFinancierId: paiement.responsableFinancierId ? String(paiement.responsableFinancierId) : userProfile?.id ? String(userProfile.id) : '',
     });
+    setPaymentConfirmed(true);
+    const currentStudent = students.find((student) => String(student.id) === String(paiement.etudiantId));
+    setPaymentClassId(String(getStudentClassId(currentStudent) || ''));
+    setPaymentLevel(getStudentLevel(currentStudent, classes));
     setIsFormModalOpen(true);
   };
 
@@ -226,6 +339,9 @@ const FinancePage = () => {
       ...initialPaymentForm,
       responsableFinancierId: userProfile?.id ? String(userProfile.id) : '',
     });
+    setPaymentClassId('');
+    setPaymentLevel('');
+    setPaymentConfirmed(false);
   };
 
   const openDeleteModal = (paiement) => {
@@ -326,6 +442,14 @@ const FinancePage = () => {
       if (editingPaiement) {
         await updatePaiement(editingPaiement.id, payload);
       } else {
+        if (!formData.etudiantId) {
+          throw new Error('Veuillez sélectionner un étudiant avant d’ajouter le paiement.');
+        }
+
+        if (!['ROLE_DIRECTEUR', 'ROLE_RESPONSABLE_FINANCIER'].includes(userRole) || !paymentConfirmed) {
+          throw new Error('Confirmez que le paiement est validé par le Directeur ou le Responsable financier.');
+        }
+
         await addPaiement(payload);
       }
 
@@ -452,6 +576,87 @@ const FinancePage = () => {
               </div>
             </section>
 
+            <section className="app-card rounded-card p-3 mb-4">
+              <div className="card-header mb-3">
+                <div>
+                  <h3>Situation financière des étudiants</h3>
+                  <p className="text-muted mb-0">Filtrez par classe, niveau puis étudiant pour voir les paiements.</p>
+                </div>
+              </div>
+
+              <div className="row g-3 mb-3">
+                <div className="col-md-4">
+                  <label className="form-label">Classe</label>
+                  <select
+                    className="form-select"
+                    value={selectedClassId}
+                    onChange={(event) => {
+                      setSelectedClassId(event.target.value);
+                      setSelectedLevel('');
+                      setSelectedStudentId('');
+                    }}
+                  >
+                    <option value="">Toutes les classes</option>
+                    {classes.map((classItem) => <option key={classItem.id} value={classItem.id}>{classItem.nom || `Classe ${classItem.id}`}</option>)}
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Niveau</label>
+                  <select
+                    className="form-select"
+                    value={selectedLevel}
+                    onChange={(event) => {
+                      setSelectedLevel(event.target.value);
+                      setSelectedStudentId('');
+                    }}
+                    disabled={!selectedClassId}
+                  >
+                    <option value="">{selectedClassId ? 'Tous les niveaux' : 'Choisir une classe d’abord'}</option>
+                    {levels.map((level) => <option key={level} value={level}>{level}</option>)}
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Étudiant</label>
+                  <select className="form-select" value={selectedStudentId} onChange={(event) => setSelectedStudentId(event.target.value)} disabled={!selectedClassId}>
+                    <option value="">Tous les étudiants</option>
+                    {classStudents
+                      .filter((student) => !selectedLevel || (student.niveau || student.niveauEtude || selectedClass?.niveau) === selectedLevel)
+                      .map((student) => <option key={student.id} value={student.id}>{student.nom} {student.prenom} {student.email ? `- ${student.email}` : ''}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="table-responsive">
+                <table className="table align-middle table-hover">
+                  <thead>
+                    <tr><th>Étudiant</th><th>Email</th><th>Classe</th><th>Niveau</th><th>Paiements</th><th>Montant payé</th><th>Situation</th></tr>
+                  </thead>
+                  <tbody>
+                    {studentFinanceRows.map((student) => {
+                      const amountPaid = student.studentPayments.filter((payment) => payment.statut === 'PAYE').reduce((total, payment) => total + Number(payment.montant || 0), 0);
+                      const studentLevel = student.niveau || student.niveauEtude || classes.find((item) => String(item.id) === String(getStudentClassId(student)))?.niveau || '—';
+                      return (
+                        <tr key={student.id}>
+                          <td>{student.nom} {student.prenom}</td>
+                          <td>{student.email || '—'}</td>
+                          <td>{getStudentClassLabel(student, classes)}</td>
+                          <td>{studentLevel}</td>
+                          <td>{student.studentPayments.length}</td>
+                          <td>{formatCurrency(amountPaid)}</td>
+                          <td>
+                            <span className={`badge-soft ${student.status === 'PAYE' ? 'success' : student.status === 'IMPAYE' ? 'danger' : 'warning'}`}>
+                              {student.status === 'PAYE' ? 'Payé' : student.status === 'IMPAYE' ? 'Impayé' : 'Non inscrit'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {!studentFinanceRows.length && <tr><td colSpan="7" className="text-muted text-center">Aucun étudiant trouvé.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
             <div className="app-card rounded-card p-3 mb-4">
               <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                 <div className="flex-grow-1">
@@ -504,21 +709,88 @@ const FinancePage = () => {
               <form onSubmit={handleFormSubmit}>
                 <div className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label">Étudiant</label>
+                    <label className="form-label">Classe</label>
                     <select
                       className="form-select"
-                      value={formData.etudiantId}
-                      onChange={(event) => setFormData({ ...formData, etudiantId: event.target.value })}
+                      value={paymentClassId}
+                      onChange={(event) => {
+                        setPaymentClassId(event.target.value);
+                        setPaymentLevel('');
+                        setFormData((current) => ({ ...current, etudiantId: '' }));
+                      }}
                       required
                     >
-                      <option value="">Sélectionner un étudiant</option>
-                      {students.map((student) => (
-                        <option key={student.id} value={student.id}>
-                          {student.nom} {student.prenom}
-                        </option>
-                      ))}
+                      <option value="">Sélectionner une classe</option>
+                      {classes.map((classItem) => <option key={classItem.id} value={classItem.id}>{classItem.nom || `Classe ${classItem.id}`}</option>)}
                     </select>
                   </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Niveau</label>
+                    <select
+                      className="form-select"
+                      value={paymentLevel}
+                      onChange={(event) => {
+                        setPaymentLevel(event.target.value);
+                        setFormData((current) => ({ ...current, etudiantId: '' }));
+                      }}
+                      disabled={!paymentClassId}
+                      required
+                    >
+                      <option value="">{paymentClassId ? 'Sélectionner un niveau' : 'Choisir une classe d’abord'}</option>
+                      {paymentLevels.map((level) => <option key={level} value={level}>{level}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Étudiant</label>
+                    <div className="d-flex gap-2">
+                      <select
+                        className="form-select"
+                        value={formData.etudiantId}
+                        onChange={(event) => setFormData({ ...formData, etudiantId: event.target.value })}
+                        required
+                        disabled={!paymentClassId || !paymentLevel}
+                      >
+                        <option value="">{paymentLevel ? 'Sélectionner un étudiant' : 'Choisir un niveau d’abord'}</option>
+                        {paymentStudents.map((student) => (
+                          <option key={student.id} value={student.id}>
+                            {student.nom} {student.prenom} {student.email ? `- ${student.email}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {!editingPaiement && (
+                        <button className="btn btn-outline-primary flex-shrink-0" type="button" onClick={openStudentForm}>
+                          <i className="bi bi-person-plus me-1" />
+                          Ajouter étudiant
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {!editingPaiement && (
+                    <div className="col-12">
+                      <div className="alert alert-light border mb-0">
+                        <div className="fw-bold mb-1">Confirmation avant ajout</div>
+                        <div className="small text-muted mb-2">
+                          Le paiement doit être validé par un Directeur ou un Responsable financier.
+                          {userRole && <span> Compte actuel : {userRole.replace('ROLE_', '').replace('_', ' ').toLowerCase()}.</span>}
+                        </div>
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="paymentConfirmed"
+                            checked={paymentConfirmed}
+                            onChange={(event) => setPaymentConfirmed(event.target.checked)}
+                          />
+                          <label className="form-check-label" htmlFor="paymentConfirmed">
+                            Je confirme que ce paiement est autorisé par le Directeur ou le Responsable financier.
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="col-md-6">
                     <label className="form-label">Référence</label>
@@ -599,13 +871,25 @@ const FinancePage = () => {
 
                   <div className="col-md-4">
                     <label className="form-label">Responsable financier</label>
-                    <input
-                      className="form-control"
-                      type="number"
-                      value={formData.responsableFinancierId}
-                      onChange={(event) => setFormData({ ...formData, responsableFinancierId: event.target.value })}
-                      placeholder="ID responsable"
-                    />
+                    {userRole === 'ROLE_DIRECTEUR' ? (
+                      <select
+                        className="form-select"
+                        value={formData.responsableFinancierId}
+                        onChange={(event) => setFormData({ ...formData, responsableFinancierId: event.target.value })}
+                        required
+                      >
+                        <option value="">Choisir un responsable</option>
+                        {financialManagers.map((manager) => (
+                          <option key={manager.id} value={manager.id}>
+                            {manager.nom} {manager.prenom} - {manager.email}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="form-control bg-light">
+                        {userProfile?.nom} {userProfile?.prenom} - {userProfile?.email}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -622,6 +906,58 @@ const FinancePage = () => {
                   <button className="btn btn-primary" type="submit" disabled={submitting}>
                     {submitting ? 'Enregistrement...' : editingPaiement ? 'Enregistrer les modifications' : 'Ajouter le paiement'}
                   </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isStudentFormOpen && (
+        <div className="student-modal-backdrop" onClick={closeStudentForm}>
+          <div className="student-modal confirm-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="student-modal-header">
+              <div>
+                <small className="student-modal-kicker">Nouveau dossier</small>
+                <h3>Ajouter un étudiant avant le paiement</h3>
+              </div>
+              <button className="btn-close" type="button" onClick={closeStudentForm} aria-label="Fermer" />
+            </div>
+            <div className="student-modal-body">
+              <form onSubmit={handleStudentSubmit}>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Nom</label>
+                    <input className="form-control" value={studentForm.nom} onChange={(event) => setStudentForm({ ...studentForm, nom: event.target.value })} required />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Prénom</label>
+                    <input className="form-control" value={studentForm.prenom} onChange={(event) => setStudentForm({ ...studentForm, prenom: event.target.value })} required />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Email</label>
+                    <input className="form-control" type="email" value={studentForm.email} onChange={(event) => setStudentForm({ ...studentForm, email: event.target.value })} required />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Téléphone</label>
+                    <input className="form-control" value={studentForm.telephone} onChange={(event) => setStudentForm({ ...studentForm, telephone: event.target.value })} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Mot de passe initial</label>
+                    <input className="form-control" type="password" value={studentForm.motDePasse} onChange={(event) => setStudentForm({ ...studentForm, motDePasse: event.target.value })} required />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Classe</label>
+                    <select className="form-select" value={studentForm.classeId} onChange={(event) => setStudentForm({ ...studentForm, classeId: event.target.value })}>
+                      <option value="">Aucune classe</option>
+                      {classes.map((classItem) => <option key={classItem.id} value={classItem.id}>{classItem.nom || `Classe ${classItem.id}`}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {errorMessage && <div className="alert alert-danger mt-3 mb-0">{errorMessage}</div>}
+                <div className="student-modal-actions mt-4">
+                  <button className="btn btn-outline-secondary" type="button" onClick={closeStudentForm}>Annuler</button>
+                  <button className="btn btn-primary" type="submit" disabled={studentSaving}>{studentSaving ? 'Création...' : 'Ajouter et continuer le paiement'}</button>
                 </div>
               </form>
             </div>

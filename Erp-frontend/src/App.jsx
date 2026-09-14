@@ -1,6 +1,14 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import './styles/custom.css';
+import './styles/theme.css';
+import './styles/layout.css';
+import './styles/navbar.css';
+import './styles/sidebar.css';
+import './styles/components.css';
+import './styles/responsive.css';
+import './styles/dashboard.css';
 import Navbar from './components/layout/Navbar';
+import NotesPage from './pages/NotesPage';
 import Sidebar from './components/layout/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -61,9 +69,25 @@ const AppLayout = () => {
               }
             />
             <Route
+              path="/notes"
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_PROFESSEUR']}>
+                  <NotesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/students"
               element={
                 <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR', 'ROLE_SURVEILLANT', 'ROLE_PROFESSEUR']}>
+                  <StudentsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-students"
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_PROFESSEUR']}>
                   <StudentsPage />
                 </ProtectedRoute>
               }

@@ -97,21 +97,14 @@ const NAV_GROUPS_BY_ROLE = {
       ],
     },
     {
-      id: 'academique',
-      label: 'Académique',
-      items: [
-        { to: '/classes', label: 'Gestion des Classes & Niveaux', icon: 'bi-mortarboard-fill' },
-        { to: '/schedule', label: 'Emplois du Temps', icon: 'bi-calendar3' },
-        { to: '/students', label: 'Gestion des Étudiants', icon: 'bi-people-fill' },
-        { to: '/attendance', label: 'Absences & Sanctions', icon: 'bi-calendar-check-fill' },
-      ],
-    },
-    {
       id: 'pedagogique',
       label: 'Pédagogique',
       items: [
-        { to: '/evaluations', label: 'Gestion des Évaluations & Examens', icon: 'bi-clipboard-check' },
-        { to: '/subjects', label: 'Programmes & Matières', icon: 'bi-book-half' },
+        { to: '/schedule', label: 'Mes Séances', icon: 'bi-calendar3' },
+        { to: '/my-students', label: 'Mes Étudiants', icon: 'bi-people-fill' },
+        { to: '/subjects', label: 'Matières & Programmes', icon: 'bi-book-half' },
+        { to: '/evaluations', label: 'Évaluations', icon: 'bi-clipboard-check' },
+        { to: '/notes', label: 'Saisie des Notes', icon: 'bi-journal-check' },
       ],
     },
   ],

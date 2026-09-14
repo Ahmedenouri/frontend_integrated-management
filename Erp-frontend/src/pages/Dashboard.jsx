@@ -397,91 +397,91 @@ const Dashboard = () => {
       </section>
 
       {role === 'ROLE_DIRECTEUR' && (
-        <section className="card-grid director-overview-grid">
-          <div className="app-card rounded-card insights-card">
-            <div className="card-header card-header-split">
+        <section className="card-grid dashboard-director-cards">
+          <div className="app-card rounded-card dashboard-director-card">
+            <div className="card-header dashboard-card-header">
               <div>
                 <h3>Flux d’activité système</h3>
-                <small className="card-subtitle">Opérations en direct sur le campus</small>
+                <small className="dashboard-card-subtitle">Opérations en direct sur le campus</small>
               </div>
-              <span className="timeline-pill">Mise à jour</span>
+              <span className="dashboard-timeline-pill">Mise à jour</span>
             </div>
-            <ul className="activity-list list-unstyled">
-              <li className="activity-item modern-item">
-                <div className="activity-icon blue">
+            <ul className="dashboard-activity-list">
+              <li className="dashboard-activity-item">
+                <div className="dashboard-activity-icon blue">
                   <i className="bi bi-people-fill" />
                 </div>
-                <div className="activity-copy">
+                <div className="dashboard-activity-copy">
                   <strong>{studentRows.length} étudiants inscrits</strong>
                   <small>Dernier total en direct des étudiants</small>
                 </div>
-                <span className="activity-badge positive">En ligne</span>
+                <span className="dashboard-activity-badge positive">En ligne</span>
               </li>
-              <li className="activity-item modern-item">
-                <div className="activity-icon purple">
+              <li className="dashboard-activity-item">
+                <div className="dashboard-activity-icon purple">
                   <i className="bi bi-person-badge-fill" />
                 </div>
-                <div className="activity-copy">
+                <div className="dashboard-activity-copy">
                   <strong>{teacherRows.length} membres du personnel actifs</strong>
                   <small>Effectif académique et administratif</small>
                 </div>
-                <span className="activity-badge neutral">Stable</span>
+                <span className="dashboard-activity-badge neutral">Stable</span>
               </li>
-              <li className="activity-item modern-item">
-                <div className="activity-icon green">
+              <li className="dashboard-activity-item">
+                <div className="dashboard-activity-icon green">
                   <i className="bi bi-credit-card" />
                 </div>
-                <div className="activity-copy">
+                <div className="dashboard-activity-copy">
                   <strong>{paymentRows.length} enregistrements de paiement</strong>
                   <small>Activité financière observée dans le système</small>
                 </div>
-                <span className="activity-badge info">Suivi</span>
+                <span className="dashboard-activity-badge info">Suivi</span>
               </li>
             </ul>
           </div>
 
-          <div className="app-card rounded-card insights-card">
-            <div className="card-header card-header-split">
+          <div className="app-card rounded-card dashboard-director-card">
+            <div className="card-header dashboard-card-header">
               <div>
                 <h3>Vue générale de l’école</h3>
-                <small className="card-subtitle">Indicateurs clés en un coup d’œil</small>
+                <small className="dashboard-card-subtitle">Indicateurs clés en un coup d’œil</small>
               </div>
-              <span className="timeline-pill alt">Ce trimestre</span>
+              <span className="dashboard-timeline-pill alt">Ce trimestre</span>
             </div>
 
-            <div className="overview-grid">
-              <div className="overview-item">
-                <span className="overview-label">Classes totales</span>
+            <div className="dashboard-overview-grid">
+              <div className="dashboard-overview-item">
+                <span className="dashboard-overview-label">Classes totales</span>
                 <strong>{dashboard.totalClasses ?? classRows.length}</strong>
                 <small>Groupes de classe actifs</small>
               </div>
-              <div className="overview-item">
-                <span className="overview-label">Matières totales</span>
+              <div className="dashboard-overview-item">
+                <span className="dashboard-overview-label">Matières totales</span>
                 <strong>{dashboard.totalMatieres ?? subjectRows.length}</strong>
                 <small>Couverture pédagogique</small>
               </div>
-              <div className="overview-item">
-                <span className="overview-label">Moyenne générale</span>
+              <div className="dashboard-overview-item">
+                <span className="dashboard-overview-label">Moyenne générale</span>
                 <strong>{dashboard.moyenneEtablissement ?? '—'}</strong>
                 <small>Performance globale de l’établissement</small>
               </div>
-              <div className="overview-item">
-                <span className="overview-label">Paiements en attente</span>
+              <div className="dashboard-overview-item">
+                <span className="dashboard-overview-label">Paiements en attente</span>
                 <strong>{formatCurrency(dashboard.totalImpayes ?? 0)}</strong>
                 <small>Suivi financier requis</small>
               </div>
             </div>
 
-            <div className="overview-footer">
-              <div className="mini-stat">
+            <div className="dashboard-overview-footer">
+              <div className="dashboard-mini-stat">
                 <span>Inscriptions</span>
                 <strong>{studentRows.length}</strong>
               </div>
-              <div className="mini-stat">
+              <div className="dashboard-mini-stat">
                 <span>Personnel</span>
                 <strong>{teacherRows.length}</strong>
               </div>
-              <div className="mini-stat highlight">
+              <div className="dashboard-mini-stat highlight">
                 <span>Finance</span>
                 <strong>{formatCurrency(dashboard.totalImpayes ?? 0)}</strong>
               </div>

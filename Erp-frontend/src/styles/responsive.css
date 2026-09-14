@@ -1,0 +1,14 @@
+/* Cross-page responsive adjustments kept separate from component styling. */
+@media (max-width: 767.98px) {
+  .stats-grid,
+  .card-grid,
+  .overview-grid,
+  .overview-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .table th,
+  .table td {
+    white-space: nowrap;
+  }
+}

@@ -125,6 +125,10 @@ export const deleteSanction = (id) => axiosClient.delete(`/api-sanction/delete-S
 
 export const addNote = (payload) => axiosClient.post('/api-note/add-Note', payload);
 
+export const updateNote = (id, payload) => axiosClient.patch(`/api-note/update-Note/${id}`, payload);
+
+export const deleteNote = (id) => axiosClient.delete(`/api-note/delete-Note/${id}`);
+
 export const getAllAbsences = () => axiosClient.get('/api-absence/getAllAbsences');
 
 export const createAbsence = (payload) => axiosClient.post('/api-absence/add-Absence', payload);

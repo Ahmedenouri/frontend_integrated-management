@@ -1,0 +1,27 @@
+/* Application shell, page headers, and content layout. */
+.app-shell,
+.app-body,
+.content-panel {
+  min-width: 0;
+}
+
+.content-panel {
+  overflow-x: auto;
+}
+
+.page-title-row .btn,
+.page-header-actions .btn {
+  flex-shrink: 0;
+}
+
+@media (max-width: 767.98px) {
+  .page-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .page-title-row .btn,
+  .page-header-actions .btn {
+    width: 100%;
+  }
+}

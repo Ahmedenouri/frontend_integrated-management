@@ -1,0 +1,10 @@
+/* Design tokens and global visual overrides. */
+:root {
+  --vpi-focus-ring: 0 0 0 0.2rem rgba(29, 78, 216, 0.14);
+  --vpi-control-radius: 0.9rem;
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.18);
+  color: #0f172a;
+}
