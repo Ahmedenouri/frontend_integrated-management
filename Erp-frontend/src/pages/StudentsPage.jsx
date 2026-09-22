@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { createStudent, deleteStudent, getAllClasses, getAllStudents, getMesEtudiants, getStudentById, updateStudent } from '../api/erpApi';
+import { createStudent, deleteStudent, getAllClasses, getAllStudents, getMesClasses, getMesEtudiants, getStudentById, updateStudent } from '../api/erpApi';
 import DataTable from '../components/DataTable';
 import { useGlobalMessage } from '../utils/notifications';
 
@@ -36,6 +36,24 @@ const buildStudentFormValues = (student = {}) => ({
   estActif: Boolean(student.estActif),
 });
 
+const getStudentClassId = (student) => student?.classeId ?? student?.classe?.id ?? student?.classId ?? student?.class?.id;
+const getStudentClassName = (student) => student?.classeNom || student?.classe?.nom || student?.className || student?.class?.nom || student?.classe;
+const getClassLevel = (classItem) => classItem?.niveau || classItem?.level || classItem?.niveauEtude || '';
+const toArray = (value, keys = []) => {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+
+  for (const key of keys) {
+    if (value[key] !== undefined) {
+      const nested = toArray(value[key], keys);
+      if (nested.length) return nested;
+    }
+  }
+
+  return [value];
+};
+const normalizeClasses = (value) => toArray(value, ['data', 'content', 'classes', 'items']).map((item) => item?.classe || item?.class || item).filter((item) => item?.id != null);
+
 const StudentsPage = () => {
   const location = useLocation();
   const isProfessorStudentsView = location.pathname === '/my-students';
@@ -43,6 +61,8 @@ const StudentsPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('');
+  const [selectedClassId, setSelectedClassId] = useState('');
   const [form, setForm] = useState(initialForm);
   const [classes, setClasses] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -58,12 +78,13 @@ const StudentsPage = () => {
   const loadStudents = async () => {
     try {
       const studentsRequest = isProfessorStudentsView ? getMesEtudiants() : getAllStudents();
-      const [studentsResult, classesResult] = await Promise.allSettled([studentsRequest, getAllClasses()]);
+      const classesRequest = isProfessorStudentsView ? getMesClasses() : getAllClasses();
+      const [studentsResult, classesResult] = await Promise.allSettled([studentsRequest, classesRequest]);
       if (studentsResult.status === 'fulfilled') {
-        setStudents(Array.isArray(studentsResult.value.data) ? studentsResult.value.data : []);
+        setStudents(toArray(studentsResult.value.data, ['data', 'content', 'students', 'items']));
       }
       if (classesResult.status === 'fulfilled') {
-        setClasses(Array.isArray(classesResult.value.data) ? classesResult.value.data : []);
+        setClasses(normalizeClasses(classesResult.value.data));
       }
     } catch (error) {
       console.error('Failed to load students:', error);
@@ -212,6 +233,28 @@ const StudentsPage = () => {
   };
 
   const filteredStudents = students.filter((student) => {
+    if (isProfessorStudentsView && !selectedLevel && !selectedClassId) {
+      return false;
+    }
+
+    if (selectedClassId) {
+      const studentClassId = getStudentClassId(student);
+      const selectedClass = classes.find((classItem) => String(classItem.id) === String(selectedClassId));
+      const matchesClassId = studentClassId != null && String(studentClassId) === String(selectedClassId);
+      const matchesClassName = selectedClass && String(getStudentClassName(student) || '').toLowerCase() === String(selectedClass.nom || '').toLowerCase();
+
+      if (!matchesClassId && !matchesClassName) {
+        return false;
+      }
+    }
+
+    if (selectedLevel) {
+      const studentClass = classes.find((classItem) => String(classItem.id) === String(getStudentClassId(student)));
+      if (!studentClass || String(getClassLevel(studentClass)) !== String(selectedLevel)) {
+        return false;
+      }
+    }
+
     const term = searchTerm.trim().toLowerCase();
 
     if (!term) {
@@ -220,6 +263,9 @@ const StudentsPage = () => {
 
     return `${student.nom || ''} ${student.prenom || ''}`.toLowerCase().includes(term);
   });
+
+  const availableLevels = [...new Set(classes.map(getClassLevel).filter(Boolean))];
+  const availableClasses = classes.filter((classItem) => !selectedLevel || String(getClassLevel(classItem)) === String(selectedLevel));
 
   const columns = [
     { key: 'nom', label: 'Nom' },
@@ -244,12 +290,16 @@ const StudentsPage = () => {
           <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openDetailsModal(row)}>
             Voir
           </button>
-          <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openEditModal(row)}>
-            Modifier
-          </button>
-          <button className="btn btn-sm btn-outline-danger" type="button" onClick={() => openDeleteModal(row)}>
-            Supprimer
-          </button>
+          {!isProfessorStudentsView && (
+            <>
+              <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openEditModal(row)}>
+                Modifier
+              </button>
+              <button className="btn btn-sm btn-outline-danger" type="button" onClick={() => openDeleteModal(row)}>
+                Supprimer
+              </button>
+            </>
+          )}
         </div>
       ),
     },
@@ -272,6 +322,24 @@ const StudentsPage = () => {
 
         <div className="app-card rounded-card p-4 mb-4">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+            {isProfessorStudentsView && (
+              <>
+                <div className="w-100 w-md-25">
+                  <label className="form-label">Niveau</label>
+                  <select className="form-select" value={selectedLevel} onChange={(event) => { setSelectedLevel(event.target.value); setSelectedClassId(''); }}>
+                    <option value="">Choisir un niveau</option>
+                    {availableLevels.map((level) => <option key={level} value={level}>{level}</option>)}
+                  </select>
+                </div>
+                <div className="w-100 w-md-25">
+                  <label className="form-label">Classe</label>
+                  <select className="form-select" value={selectedClassId} onChange={(event) => setSelectedClassId(event.target.value)} disabled={!selectedLevel}>
+                    <option value="">{selectedLevel ? 'Choisir une classe' : 'Choisir un niveau d’abord'}</option>
+                    {availableClasses.map((classItem) => <option key={classItem.id} value={classItem.id}>{classItem.nom || `Classe ${classItem.id}`}</option>)}
+                  </select>
+                </div>
+              </>
+            )}
             <div className="w-100 w-md-50">
               <label className="form-label">Recherche par nom</label>
               <input

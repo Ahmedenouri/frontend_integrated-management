@@ -52,6 +52,9 @@ const Navbar = () => {
     <>
       <nav className="top-navbar">
         <div className="navbar-brand-group">
+          <div className="brand-mark" aria-hidden="true">
+            <i className="bi bi-mortarboard-fill" />
+          </div>
           <div className="brand-copy">
             <a style={{ textDecoration: 'none' }} href="/dashboard" className="brand-label">
               <span className="brand-label">Victoria Professional Institute</span>

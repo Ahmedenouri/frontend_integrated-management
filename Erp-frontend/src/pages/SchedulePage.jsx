@@ -24,12 +24,32 @@ const timetableFormInitial = { classeId: '', semestre: '1', surveillantId: '', e
 const sessionFormInitial = { jour: 'LUNDI', heureDebut: '', heureFin: '', emploiDuTempsId: '', professeurId: '', salleId: '', matiereId: '' };
 const days = ['LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI'];
 
-const asArray = (value) => (Array.isArray(value) ? value : value ? [value] : []);
-const fullName = (person) => [person?.prenom, person?.nom].filter(Boolean).join(' ') || person?.email || '—';
-const findName = (items, id) => fullName(items.find((item) => String(item.id) === String(id)));
+const asArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+
+  for (const key of ['data', 'content', 'items', 'emploisDuTemps', 'sessions', 'seances']) {
+    if (value[key] !== undefined) {
+      const nested = asArray(value[key]);
+      if (nested.length) return nested;
+    }
+  }
+
+  return [value];
+};
+const label = (value, fallback = '—') => {
+  if (!value) return fallback;
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  return value.nom || value.name || value.intitule || value.libelle || value.codeSalle || value.titre || fallback;
+};
+const fullName = (person) => [person?.prenom, person?.nom].filter(Boolean).join(' ') || person?.fullName || person?.name || person?.email || '—';
+const findName = (items, id, fallback) => {
+  const match = items.find((item) => String(item.id) === String(id));
+  return match ? fullName(match) : label(fallback);
+};
 
 const SchedulePage = () => {
-  const { userRole } = useAuth();
+  const { userRole, userProfile } = useAuth();
   const canManage = ['ROLE_DIRECTEUR', 'ROLE_SURVEILLANT'].includes(userRole);
   const [timetables, setTimetables] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -97,9 +117,9 @@ const SchedulePage = () => {
   const getSessionDetails = (session) => {
     const timetable = timetableById.get(String(session.emploiDuTempsId));
     return {
-      classe: timetable ? findName(classes, timetable.classeId) : 'Classe non renseignée',
-      matiere: findName(subjects, session.matiereId),
-      salle: rooms.find((room) => String(room.id) === String(session.salleId))?.codeSalle || 'Salle non renseignée',
+      classe: session.classeNom || session.classe?.nom || (timetable ? findName(classes, timetable.classeId) : 'Classe non renseignée'),
+      matiere: session.matiereNom || session.matiere?.intitule || findName(subjects, session.matiereId),
+      salle: session.salleNom || session.salle?.codeSalle || rooms.find((room) => String(room.id) === String(session.salleId))?.codeSalle || 'Salle non renseignée',
     };
   };
 
@@ -186,10 +206,7 @@ const SchedulePage = () => {
     { key: 'jour', label: 'Jour' },
     { key: 'heureDebut', label: 'Début' },
     { key: 'heureFin', label: 'Fin' },
-    { key: 'emploiDuTempsId', label: 'Classe / semestre', render: (row) => { const timetable = timetableById.get(String(row.emploiDuTempsId)); return timetable ? `${findName(classes, timetable.classeId)} • S${timetable.semestre}` : '—'; } },
-    { key: 'professeurId', label: 'Professeur', render: (row) => findName(teachers, row.professeurId) },
-    { key: 'matiereId', label: 'Matière', render: (row) => findName(subjects, row.matiereId) },
-    { key: 'salleId', label: 'Salle', render: (row) => rooms.find((room) => String(room.id) === String(row.salleId))?.codeSalle || '—' },
+    { key: 'professeurId', label: 'Professeur', render: (row) => row.professeurNom || row.professeur?.nom || findName(teachers, row.professeurId, String(row.professeurId) === String(userProfile?.id) ? userProfile : row.professeur) },
     ...(canManage ? [{ key: 'actions', label: 'Actions', render: (row) => <div className="d-flex flex-column align-items-start gap-2"><button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openEditSession(row)}>Modifier</button><button className="btn btn-sm btn-outline-danger" type="button" onClick={() => confirmDelete('session', row)}>Supprimer</button></div> }] : []),
   ];
 

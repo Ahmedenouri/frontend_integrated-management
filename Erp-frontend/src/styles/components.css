@@ -195,6 +195,41 @@
 .notes-form { padding: 1.25rem; border-radius: 0.9rem; background: #eff6ff; border: 1px solid #bfdbfe; }
 .notes-form h4 { margin-bottom: 1rem; color: #1e3a8a; }
 
+.student-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 13rem;
+}
+
+.student-note-chip {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.65rem;
+  background: #eff6ff;
+}
+
+.student-note-chip strong {
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+
+.student-note-chip small {
+  overflow: hidden;
+  color: #475569;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-note-actions {
+  display: inline-flex;
+  gap: 0.45rem;
+}
+
 @media (max-width: 767.98px) {
   .notes-student-summary { grid-template-columns: 1fr; }
   .notes-entry-panel { max-height: calc(100vh - 1.5rem); }

@@ -7,17 +7,19 @@ import {
   addSanction,
   getAllAbsences,
   getAllClasses,
+  getAllEmploisDuTemps,
   getAllMatieres,
+  getAllSalles,
   getAllPaiements,
   getAllStudents,
   getAllTeachers,
   getDashboardDiscipline,
   getDashboardFinancier,
   getDashboardStats,
+  getAllSeances,
   getMesAbsences,
   getMesClasses,
   getMesEtudiants,
-  getMesNotes,
   getMesSeances,
 } from '../api/erpApi';
 import { useAuth } from '../context/AuthContext';
@@ -50,12 +52,84 @@ const initialSanctionForm = {
   estTraitee: false,
 };
 
-const initialNoteForm = {
-  etudiantId: '',
-  evaluationId: '',
-  valeur: '',
-  appreciation: '',
-  dateSaisie: '',
+const toArray = (value, keys = []) => {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  for (const key of keys) {
+    if (value?.[key] !== undefined) {
+      const nestedValue = toArray(value[key], keys);
+      if (nestedValue.length) {
+        return nestedValue;
+      }
+    }
+  }
+
+  if (value && typeof value === 'object' && [
+    'id',
+    'date',
+    'dateSeance',
+    'heureDebut',
+    'matiere',
+    'classe',
+    'libelle',
+  ].some((key) => value[key] !== undefined)) {
+    return [value];
+  }
+
+  if (value && typeof value === 'object') {
+    for (const nestedValue of Object.values(value)) {
+      const nestedArray = toArray(nestedValue, keys);
+      if (nestedArray.length) {
+        return nestedArray;
+      }
+    }
+  }
+
+  return [];
+};
+
+const getRelatedLabel = (value, fallback = '—') => {
+  if (!value) {
+    return fallback;
+  }
+
+  if (typeof value === 'string' || typeof value === 'number') {
+    return String(value);
+  }
+
+  return value.nom || value.name || value.intitule || value.libelle || value.titre || fallback;
+};
+
+const getScheduleSubject = (schedule, subjects = []) => getRelatedLabel(
+  schedule.matiere || schedule.subject || schedule.matiereNom || schedule.subjectName || schedule.libelle
+    || subjects.find((item) => String(item.id) === String(schedule.matiereId)),
+  'Cours'
+);
+
+const getScheduleClass = (schedule, classes = []) => getRelatedLabel(
+  schedule.classe || schedule.class || schedule.classeNom || schedule.className
+    || classes.find((item) => String(item.id) === String(schedule.classeId))
+);
+
+const getScheduleRoom = (schedule, rooms = []) => getRelatedLabel(
+  schedule.salle || schedule.room || schedule.salleNom || schedule.roomName
+    || rooms.find((item) => String(item.id) === String(schedule.salleId))
+);
+
+const getScheduleDate = (schedule) => schedule.date || schedule.dateSeance || schedule.dateCours || '—';
+const getScheduleTime = (schedule) => schedule.horaire || [schedule.heureDebut, schedule.heureFin].filter(Boolean).join(' - ') || '—';
+const getScheduleDay = (schedule) => schedule.jour || schedule.day || getScheduleDate(schedule);
+const mergeSchedules = (...collections) => {
+  const uniqueSchedules = new Map();
+
+  collections.flat().forEach((schedule, index) => {
+    const key = schedule.id ?? `${getScheduleDay(schedule)}-${getScheduleTime(schedule)}-${schedule.classeId ?? ''}-${schedule.salleId ?? ''}-${index}`;
+    uniqueSchedules.set(String(key), schedule);
+  });
+
+  return [...uniqueSchedules.values()];
 };
 
 const formatDate = (value) => {
@@ -90,14 +164,15 @@ const Dashboard = () => {
   const [classRows, setClassRows] = useState([]);
   const [subjectRows, setSubjectRows] = useState([]);
   const [timeTableRows, setTimeTableRows] = useState([]);
-  const [noteRows, setNoteRows] = useState([]);
   const [classAssignments, setClassAssignments] = useState([]);
   const [studentAssignments, setStudentAssignments] = useState([]);
+  const [scheduleClasses, setScheduleClasses] = useState([]);
+  const [scheduleSubjects, setScheduleSubjects] = useState([]);
+  const [scheduleRooms, setScheduleRooms] = useState([]);
   const [message, setMessage] = useGlobalMessage('success');
   const [paymentForm, setPaymentForm] = useState(initialPaymentForm);
   const [receiptForm, setReceiptForm] = useState(initialReceiptForm);
   const [sanctionForm, setSanctionForm] = useState(initialSanctionForm);
-  const [noteForm, setNoteForm] = useState(initialNoteForm);
 
   useEffect(() => {
     const loadData = async () => {
@@ -146,29 +221,46 @@ const Dashboard = () => {
           setAbsenceRows(Array.isArray(absences) ? absences : []);
           setStudentRows(Array.isArray(students) ? students : []);
         } else if (normalizedRole === 'ROLE_PROFESSEUR') {
-          const [{ data: classes }, { data: students }, { data: schedule }, { data: notes }] = await Promise.all([
+          const [classesResult, studentsResult, scheduleResult, timetableResult, ownScheduleResult, allClassesResult, subjectsResult, roomsResult] = await Promise.allSettled([
             getMesClasses(),
             getMesEtudiants(),
+            getAllSeances(),
+            getAllEmploisDuTemps(),
             getMesSeances(),
-            getMesNotes(),
+            getAllClasses(),
+            getAllMatieres(),
+            getAllSalles(),
           ]);
 
-          setClassAssignments(Array.isArray(classes) ? classes : []);
-          setStudentAssignments(Array.isArray(students) ? students : []);
-          setTimeTableRows(Array.isArray(schedule) ? schedule : []);
-          setNoteRows(Array.isArray(notes) ? notes : []);
+          const classes = classesResult.status === 'fulfilled' ? classesResult.value?.data : [];
+          const students = studentsResult.status === 'fulfilled' ? studentsResult.value?.data : [];
+          const schedule = scheduleResult.status === 'fulfilled' ? scheduleResult.value?.data : [];
+          const timetable = timetableResult.status === 'fulfilled' ? timetableResult.value?.data : [];
+          const ownSchedule = ownScheduleResult.status === 'fulfilled' ? ownScheduleResult.value?.data : [];
+          const allClasses = allClassesResult.status === 'fulfilled' ? allClassesResult.value?.data : [];
+          const subjects = subjectsResult.status === 'fulfilled' ? subjectsResult.value?.data : [];
+          const rooms = roomsResult.status === 'fulfilled' ? roomsResult.value?.data : [];
+
+          setClassAssignments(toArray(classes, ['data', 'content', 'classes', 'items']));
+          setStudentAssignments(toArray(students, ['data', 'content', 'students', 'items']));
+          setScheduleClasses(toArray(allClasses, ['data', 'content', 'classes', 'items']));
+          setScheduleSubjects(toArray(subjects, ['data', 'content', 'matieres', 'subjects', 'items']));
+          setScheduleRooms(toArray(rooms, ['data', 'content', 'salles', 'rooms', 'items']));
+          setTimeTableRows(mergeSchedules(
+            toArray(schedule, ['data', 'content', 'sessions', 'seances', 'items']),
+            toArray(timetable, ['data', 'content', 'emplois', 'emploisDuTemps', 'schedules', 'sessions', 'seances', 'items']),
+            toArray(ownSchedule, ['data', 'content', 'sessions', 'seances', 'items'])
+          ));
         } else if (normalizedRole === 'ROLE_ETUDIANT') {
-          const [{ data: absences }, { data: schedule }, { data: notes }, { data: classes }, { data: matieres }] = await Promise.all([
+          const [{ data: absences }, { data: schedule }, { data: classes }, { data: matieres }] = await Promise.all([
             getMesAbsences(),
             getMesSeances(),
-            getMesNotes(),
             getAllClasses(),
             getAllMatieres(),
           ]);
 
           setAbsenceRows(Array.isArray(absences) ? absences : []);
           setTimeTableRows(Array.isArray(schedule) ? schedule : []);
-          setNoteRows(Array.isArray(notes) ? notes : []);
           setClassRows(Array.isArray(classes) ? classes : []);
           setSubjectRows(Array.isArray(matieres) ? matieres : []);
         }
@@ -186,7 +278,6 @@ const Dashboard = () => {
     if (userProfile?.id) {
       setPaymentForm((current) => ({ ...current, responsableFinancierId: userProfile.id }));
       setSanctionForm((current) => ({ ...current, surveillantId: userProfile.id }));
-      setNoteForm((current) => ({ ...current, professeurId: userProfile.id }));
     }
   }, [userProfile]);
 
@@ -261,7 +352,6 @@ const Dashboard = () => {
         { label: 'Classes assignées', value: classAssignments.length, icon: 'bi-mortarboard-fill', tone: 'primary' },
         { label: 'Groupes d’étudiants', value: studentAssignments.length, icon: 'bi-people-fill', tone: 'positive' },
         { label: 'Éléments du planning', value: timeTableRows.length, icon: 'bi-calendar3', tone: 'warning' },
-        { label: 'Notes saisies', value: noteRows.length, icon: 'bi-journal-check', tone: 'positive' },
       ];
     }
 
@@ -271,7 +361,7 @@ const Dashboard = () => {
       { label: 'Absences', value: absenceRows.length, icon: 'bi-calendar-x-fill', tone: 'danger' },
       { label: 'Emploi du temps', value: timeTableRows.length, icon: 'bi-calendar3', tone: 'warning' },
     ];
-  }, [absenceRows.length, classAssignments.length, dashboard, role, paymentRows.length, studentAssignments.length, studentRows.length, subjectRows.length, teacherRows.length, timeTableRows.length, noteRows.length]);
+  }, [absenceRows.length, classAssignments.length, dashboard, role, paymentRows.length, studentAssignments.length, studentRows.length, subjectRows.length, teacherRows.length, timeTableRows.length]);
 
   const handlePaymentSubmit = async (event) => {
     event.preventDefault();
@@ -318,25 +408,6 @@ const Dashboard = () => {
       setSanctionForm(initialSanctionForm);
     } catch (error) {
       setMessage(error.response?.data?.message || 'Unable to create sanction.');
-    }
-  };
-
-  const handleNoteSubmit = async (event) => {
-    event.preventDefault();
-    try {
-      await addNote({
-        ...noteForm,
-        etudiantId: Number(noteForm.etudiantId),
-        evaluationId: Number(noteForm.evaluationId),
-        valeur: Number(noteForm.valeur),
-        professeurId: Number(userProfile?.id),
-      });
-      setMessage('Grade submitted successfully.');
-      setNoteForm(initialNoteForm);
-      const { data: notes } = await getMesNotes();
-      setNoteRows(Array.isArray(notes) ? notes : []);
-    } catch (error) {
-      setMessage(error.response?.data?.message || 'Unable to submit grade.');
     }
   };
 
@@ -622,8 +693,8 @@ const Dashboard = () => {
                 <tbody>
                   {classAssignments.map((item) => (
                     <tr key={item.id ?? item.nom}>
-                      <td>{item.nom || item.classeNom || '—'}</td>
-                      <td>{item.specialite || item.matiere || '—'}</td>
+                      <td>{item.nom || item.classeNom || item.classe?.nom || item.class?.nom || scheduleClasses.find((classItem) => String(classItem.id) === String(item.classeId))?.nom || '—'}</td>
+                      <td>{item.specialite || item.matiere || item.matiereNom || item.subject?.nom || scheduleSubjects.find((subject) => String(subject.id) === String(item.matiereId))?.intitule || scheduleSubjects.find((subject) => String(subject.id) === String(item.matiereId))?.nom || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -633,51 +704,39 @@ const Dashboard = () => {
 
           <div className="app-card rounded-card p-3">
             <div className="card-header">
-              <h3>Planning de cours du jour</h3>
+              <h3>Planning global des cours</h3>
             </div>
-            <ul className="activity-list list-unstyled">
-              {timeTableRows.map((schedule) => (
-                <li key={schedule.id ?? schedule.libelle} className="activity-item">
-                  <div>
-                    <strong>{schedule.libelle || schedule.matiere || 'Session'}</strong>
-                    <small>{schedule.date || schedule.horaire || '—'}</small>
-                  </div>
-                  <i className="bi bi-calendar3 text-primary" />
-                </li>
-              ))}
-            </ul>
+            <div className="table-responsive">
+              <table className="table align-middle">
+                <thead>
+                  <tr>
+                    <th>Matière</th>
+                    <th>Classe</th>
+                    <th>Salle</th>
+                    <th>Date</th>
+                    <th>Horaire</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {timeTableRows.map((schedule) => (
+                    <tr key={schedule.id ?? `${getScheduleDate(schedule)}-${getScheduleTime(schedule)}-${getScheduleSubject(schedule)}`}>
+                      <td>{getScheduleSubject(schedule, scheduleSubjects)}</td>
+                      <td>{getScheduleClass(schedule, scheduleClasses)}</td>
+                      <td>{getScheduleRoom(schedule, scheduleRooms)}</td>
+                      <td>{getScheduleDay(schedule)}</td>
+                      <td>{getScheduleTime(schedule)}</td>
+                    </tr>
+                  ))}
+                  {!timeTableRows.length && (
+                    <tr>
+                      <td colSpan="5" className="text-center text-muted">Aucune séance programmée.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="app-card rounded-card p-3">
-            <div className="card-header">
-              <h3>Saisie rapide des notes</h3>
-            </div>
-            <form onSubmit={handleNoteSubmit}>
-              <div className="row g-2">
-                <div className="col-md-4">
-                  <label className="form-label">ID étudiant</label>
-                  <input className="form-control" type="number" value={noteForm.etudiantId} onChange={(e) => setNoteForm({ ...noteForm, etudiantId: e.target.value })} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">ID évaluation</label>
-                  <input className="form-control" type="number" value={noteForm.evaluationId} onChange={(e) => setNoteForm({ ...noteForm, evaluationId: e.target.value })} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Valeur</label>
-                  <input className="form-control" type="number" step="0.01" value={noteForm.valeur} onChange={(e) => setNoteForm({ ...noteForm, valeur: e.target.value })} />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Date</label>
-                  <input className="form-control" type="date" value={noteForm.dateSaisie} onChange={(e) => setNoteForm({ ...noteForm, dateSaisie: e.target.value })} />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label">Appréciation</label>
-                  <input className="form-control" value={noteForm.appreciation} onChange={(e) => setNoteForm({ ...noteForm, appreciation: e.target.value })} />
-                </div>
-              </div>
-              <button className="btn btn-primary mt-3" type="submit">Soumettre la note</button>
-            </form>
-          </div>
         </section>
       )}
 

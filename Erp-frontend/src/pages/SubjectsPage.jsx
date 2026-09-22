@@ -20,6 +20,26 @@ const initialForm = {
   volumeHoraire: '',
 };
 
+const toArray = (value, keys = []) => {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+
+  for (const key of keys) {
+    if (value[key] !== undefined) {
+      const nested = toArray(value[key], keys);
+      if (nested.length) return nested;
+    }
+  }
+
+  return [value];
+};
+
+const getClassLabel = (classItem) => {
+  if (typeof classItem === 'string' || typeof classItem === 'number') return String(classItem);
+  return classItem?.nom || classItem?.name || classItem?.classeNom || classItem?.classeName || classItem?.className || classItem?.classe?.nom || classItem?.class?.nom || '';
+};
+const getClassKey = (classItem) => String(classItem?.id ?? getClassLabel(classItem));
+
 const SubjectsPage = () => {
   const { userRole } = useAuth();
   const isProfessor = userRole === 'ROLE_PROFESSEUR';
@@ -47,36 +67,41 @@ const SubjectsPage = () => {
           getAllClasses(),
           getMesClasses(),
         ]);
-        const allSubjects = subjectsResult.status === 'fulfilled' && Array.isArray(subjectsResult.value.data) ? subjectsResult.value.data : [];
-        const sessions = sessionsResult.status === 'fulfilled' && Array.isArray(sessionsResult.value.data) ? sessionsResult.value.data : [];
-        const timetables = timetablesResult.status === 'fulfilled' ? (Array.isArray(timetablesResult.value.data) ? timetablesResult.value.data : [timetablesResult.value.data]) : [];
-        const classes = classesResult.status === 'fulfilled' && Array.isArray(classesResult.value.data) ? classesResult.value.data : [];
-        const assignments = assignmentsResult.status === 'fulfilled' && Array.isArray(assignmentsResult.value.data) ? assignmentsResult.value.data : [];
+        const allSubjects = subjectsResult.status === 'fulfilled' ? toArray(subjectsResult.value.data, ['data', 'content', 'matieres', 'subjects', 'items']) : [];
+        const sessions = sessionsResult.status === 'fulfilled' ? toArray(sessionsResult.value.data, ['data', 'content', 'sessions', 'seances', 'items']) : [];
+        const timetables = timetablesResult.status === 'fulfilled' ? toArray(timetablesResult.value.data, ['data', 'content', 'emploisDuTemps', 'items']) : [];
+        const classes = classesResult.status === 'fulfilled' ? toArray(classesResult.value.data, ['data', 'content', 'classes', 'items']) : [];
+        const assignments = assignmentsResult.status === 'fulfilled' ? toArray(assignmentsResult.value.data, ['data', 'content', 'assignments', 'items']) : [];
         const timetableMap = new Map(timetables.map((item) => [String(item.id), item]));
         const subjectMap = new Map(allSubjects.map((item) => [String(item.id), item]));
         const grouped = new Map();
 
         sessions.forEach((session) => {
-          const subject = subjectMap.get(String(session.matiereId));
+          const subject = subjectMap.get(String(session.matiereId)) || session.matiere || {
+            id: session.matiereId || session.matiereNom,
+            intitule: session.matiereNom || session.matiere?.intitule || session.matiere?.nom,
+          };
           if (!subject) return;
           const timetable = timetableMap.get(String(session.emploiDuTempsId));
           const classId = timetable?.classeId || session.classeId;
-          const classItem = classes.find((item) => String(item.id) === String(classId));
-          const key = String(subject.id);
+          const className = session.classeNom || session.classeName || session.className || timetable?.classeNom || timetable?.classeName || timetable?.className;
+          const classItem = classes.find((item) => String(item.id) === String(classId)) || session.classe || timetable?.classe || (className ? { id: classId || className, nom: className } : null);
+          const key = String(subject.id || subject.intitule);
           const current = grouped.get(key) || { ...subject, assignedClasses: [], weeklyHours: 0 };
-          if (classItem && !current.assignedClasses.some((item) => String(item.id) === String(classItem.id))) current.assignedClasses.push(classItem);
+          if (classItem && !current.assignedClasses.some((item) => getClassKey(item) === getClassKey(classItem))) current.assignedClasses.push(classItem);
           current.weeklyHours += Number(subject.volumeHoraire || 0);
           grouped.set(key, current);
         });
 
         assignments.forEach((assignment) => {
           const subjectId = assignment.matiereId || assignment.matiere?.id;
-          const subject = subjectMap.get(String(subjectId)) || assignment.matiere;
+          const subject = subjectMap.get(String(subjectId)) || assignment.matiere || (assignment.matiereNom ? { id: subjectId || assignment.matiereNom, intitule: assignment.matiereNom } : null);
           if (!subject) return;
           const current = grouped.get(String(subject.id)) || { ...subject, assignedClasses: [], weeklyHours: 0 };
           const classId = assignment.classeId || assignment.classe?.id;
-          const classItem = classes.find((item) => String(item.id) === String(classId)) || assignment.classe;
-          if (classItem && !current.assignedClasses.some((item) => String(item.id) === String(classItem.id))) current.assignedClasses.push(classItem);
+          const className = assignment.classeNom || assignment.classeName || assignment.className;
+          const classItem = classes.find((item) => String(item.id) === String(classId)) || assignment.classe || (className ? { id: classId || className, nom: className } : null);
+          if (classItem && !current.assignedClasses.some((item) => getClassKey(item) === getClassKey(classItem))) current.assignedClasses.push(classItem);
           grouped.set(String(subject.id), current);
         });
 
@@ -240,7 +265,6 @@ const SubjectsPage = () => {
                 </div>
                 <h3>{subject.intitule || 'Matière sans intitulé'}</h3>
                 <div className="assigned-subject-details">
-                  <div><span>Classes affectées</span><strong>{subject.assignedClasses?.map((item) => item.nom || item.name).filter(Boolean).join(', ') || '—'}</strong></div>
                   <div><span>Coefficient</span><strong>{subject.coefficient ?? '—'}</strong></div>
                   <div><span>Volume horaire</span><strong>{subject.weeklyHours || subject.volumeHoraire || 0} h / semaine</strong></div>
                 </div>
