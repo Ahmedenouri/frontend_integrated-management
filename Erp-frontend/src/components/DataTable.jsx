@@ -1,5 +1,5 @@
-const DataTable = ({ columns, rows, emptyMessage = 'No data available.' }) => {
-  if (!rows || rows.length === 0) {
+const DataTable = ({ columns, rows, emptyMessage = 'No data available.', showEmptyTable = false, tableClassName = '' }) => {
+  if ((!rows || rows.length === 0) && !showEmptyTable) {
     return (
       <div className="app-card rounded-card table-card page-empty p-4 text-center text-muted">
         {emptyMessage}
@@ -10,7 +10,7 @@ const DataTable = ({ columns, rows, emptyMessage = 'No data available.' }) => {
   return (
     <div className="app-card rounded-card table-card">
       <div className="table-responsive">
-        <table className="table align-middle table-hover">
+        <table className={`table align-middle table-hover ${tableClassName}`.trim()}>
           <thead>
             <tr>
               {columns.map((column) => (
@@ -19,7 +19,7 @@ const DataTable = ({ columns, rows, emptyMessage = 'No data available.' }) => {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => (
+            {rows && rows.length > 0 ? rows.map((row, index) => (
               <tr key={row.id || `${row.name || 'row'}-${index}`}>
                 {columns.map((column) => (
                   <td key={`${column.key}-${row.id || index}`}>
@@ -27,7 +27,11 @@ const DataTable = ({ columns, rows, emptyMessage = 'No data available.' }) => {
                   </td>
                 ))}
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td className="text-center text-muted" colSpan={columns.length}>{emptyMessage}</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

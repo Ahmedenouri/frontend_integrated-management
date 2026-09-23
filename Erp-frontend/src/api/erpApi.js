@@ -125,6 +125,8 @@ export const deleteSanction = (id) => axiosClient.delete(`/api-sanction/delete-S
 
 export const addNote = (payload) => axiosClient.post('/api-note/add-Note', payload);
 
+export const getAllNotes = () => axiosClient.get('/api-note/getAllNotes');
+
 export const updateNote = (id, payload) => axiosClient.patch(`/api-note/update-Note/${id}`, payload);
 
 export const deleteNote = (id) => axiosClient.delete(`/api-note/delete-Note/${id}`);
@@ -188,6 +190,12 @@ export const deleteSeance = (id) => axiosClient.delete(`/api-seance/delete-Seanc
 export const getAllSalles = () => axiosClient.get('/api-salle/getAllSalles');
 
 export const getAllBulletins = () => axiosClient.get('/api-bulletin/getAllBulletins');
+
+export const addBulletin = (payload) => axiosClient.post('/api-bulletin/add-Bulletin', payload);
+
+export const downloadBulletinPdf = (etudiantId) => axiosClient.get(`/api-bulletin/pdf/${etudiantId}`, {
+  responseType: 'blob',
+});
 
 export const getMesNotes = () => axiosClient.get('/api-note/mes-notes');
 

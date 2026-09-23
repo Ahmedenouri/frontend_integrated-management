@@ -4,9 +4,11 @@ import {
   deleteEvaluation,
   getAllEvaluations,
   getAllMatieres,
+  getMesSeances,
   updateEvaluation,
 } from '../api/erpApi';
 import DataTable from '../components/DataTable';
+import { useAuth } from '../context/AuthContext';
 import { useGlobalMessage } from '../utils/notifications';
 
 const initialForm = {
@@ -17,7 +19,29 @@ const initialForm = {
   matiereId: '',
 };
 
+const toArray = (value, keys = []) => {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+  for (const key of keys) {
+    if (value[key] !== undefined) return toArray(value[key], keys);
+  }
+  return [value];
+};
+const normalizeSubjectLabel = (subject) => String(subject?.intitule || subject?.nom || subject?.name || subject?.matiereNom || '').trim().toLowerCase();
+const getSessionSubject = (session) => {
+  if (session.matiere && typeof session.matiere === 'object') return session.matiere;
+  if (session.subject && typeof session.subject === 'object') return session.subject;
+  if (typeof session.matiere === 'string') return { id: session.matiereId || session.matiere, intitule: session.matiere };
+  if (typeof session.subject === 'string') return { id: session.subjectId || session.subject, intitule: session.subject };
+  const subjectName = session.matiereNom || session.matiereName || session.subjectName || session.subjectNom;
+  if (subjectName) return { id: session.matiereId || session.subjectId || subjectName, intitule: subjectName };
+  return null;
+};
+
 const EvaluationsPage = () => {
+  const { userRole } = useAuth();
+  const isProfessor = userRole === 'ROLE_PROFESSEUR';
+  const canManageEvaluations = ['ROLE_DIRECTEUR', 'ROLE_PROFESSEUR'].includes(userRole);
   const [evaluations, setEvaluations] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,13 +57,41 @@ const EvaluationsPage = () => {
 
   const loadData = async () => {
     try {
-      const [evaluationsResponse, matieresResponse] = await Promise.all([
+      const [evaluationsResponse, matieresResponse, sessionsResponse] = await Promise.all([
         getAllEvaluations(),
         getAllMatieres(),
+        isProfessor ? getMesSeances() : Promise.resolve({ data: [] }),
       ]);
 
-      setEvaluations(Array.isArray(evaluationsResponse?.data) ? evaluationsResponse.data : []);
-      setSubjects(Array.isArray(matieresResponse?.data) ? matieresResponse.data : []);
+      const loadedEvaluations = toArray(evaluationsResponse?.data, ['data', 'content', 'evaluations', 'items']);
+      const loadedSubjects = toArray(matieresResponse?.data, ['data', 'content', 'matieres', 'subjects', 'items']);
+      const sessions = toArray(sessionsResponse?.data, ['data', 'content', 'seances', 'sessions', 'items']);
+      const assignedSubjectIds = new Set(sessions
+        .map((session) => session.matiereId ?? session.matiere?.id ?? session.subjectId)
+        .filter((id) => id != null)
+        .map(String));
+      const assignedSubjectLabels = new Set(sessions
+        .map(getSessionSubject)
+        .map(normalizeSubjectLabel)
+        .filter(Boolean));
+      const assignedSubjects = [...new Map(sessions
+        .map(getSessionSubject)
+        .filter(Boolean)
+        .map((subject) => [String(subject.id || normalizeSubjectLabel(subject)), subject])).values()];
+      const subjectsById = new Map(loadedSubjects.map((subject) => [String(subject.id), subject]));
+      const availableAssignedSubjects = [...new Map(assignedSubjects.map((subject) => {
+        const fullSubject = subjectsById.get(String(subject.id))
+          || loadedSubjects.find((item) => normalizeSubjectLabel(item) === normalizeSubjectLabel(subject));
+        return [String(fullSubject?.id || subject.id), fullSubject || subject];
+      })).values()];
+
+      setEvaluations(isProfessor
+        ? loadedEvaluations.filter((evaluation) => assignedSubjectIds.has(String(evaluation.matiereId ?? evaluation.matiere?.id))
+          || assignedSubjectLabels.has(normalizeSubjectLabel(evaluation.matiere || evaluation.subject)))
+        : loadedEvaluations);
+      setSubjects(isProfessor
+        ? [...loadedSubjects.filter((subject) => assignedSubjectIds.has(String(subject.id)) || assignedSubjectLabels.has(normalizeSubjectLabel(subject))), ...availableAssignedSubjects]
+        : loadedSubjects);
     } catch (error) {
       console.error('Failed to load evaluations data:', error);
       setErrorMessage('Impossible de charger les évaluations.');
@@ -49,8 +101,10 @@ const EvaluationsPage = () => {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    const timer = window.setTimeout(loadData, 0);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isProfessor]);
 
   const resetForm = () => {
     setForm(initialForm);
@@ -188,7 +242,7 @@ const EvaluationsPage = () => {
     {
       key: 'actions',
       label: 'Actions',
-      render: (row) => (
+      render: (row) => canManageEvaluations ? (
         <div className="d-flex gap-2">
           <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openEditModal(row)}>
             Modifier
@@ -197,7 +251,7 @@ const EvaluationsPage = () => {
             Supprimer
           </button>
         </div>
-      ),
+      ) : <span className="text-muted">Consultation</span>,
     },
   ];
 
@@ -207,9 +261,11 @@ const EvaluationsPage = () => {
         <header className="page-header">
           <div className="page-title-row">
             <h1>Évaluations</h1>
-            <button className="btn btn-primary" type="button" onClick={openCreateModal}>
-              Ajouter une évaluation
-            </button>
+            {canManageEvaluations && (
+              <button className="btn btn-primary" type="button" onClick={openCreateModal}>
+                Ajouter une évaluation
+              </button>
+            )}
           </div>
           <p className="page-subtitle">Gérez les évaluations, ajoutez, modifiez ou supprimez les enregistrements.</p>
         </header>

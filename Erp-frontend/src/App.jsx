@@ -8,7 +8,6 @@ import './styles/components.css';
 import './styles/responsive.css';
 import './styles/dashboard.css';
 import Navbar from './components/layout/Navbar';
-import NotesPage from './pages/NotesPage';
 import Sidebar from './components/layout/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -16,6 +15,7 @@ import AttendancePage from './pages/AttendancePage';
 import BulletinsPage from './pages/BulletinsPage';
 import ClassesPage from './pages/ClassesPage';
 import Dashboard from './pages/Dashboard';
+import DirectorNotesPage from './pages/DirectorNotesPage';
 import EvaluationsPage from './pages/EvaluationsPage';
 import FinancePage from './pages/FinancePage';
 import FinancialManagersPage from './pages/FinancialManagersPage';
@@ -72,7 +72,15 @@ const AppLayout = () => {
               path="/notes"
               element={
                 <ProtectedRoute allowedRoles={['ROLE_PROFESSEUR']}>
-                  <NotesPage />
+                  <DirectorNotesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/director-notes"
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR']}>
+                  <DirectorNotesPage />
                 </ProtectedRoute>
               }
             />

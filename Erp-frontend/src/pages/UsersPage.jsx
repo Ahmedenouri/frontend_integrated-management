@@ -62,6 +62,25 @@ const roleLabels = {
 };
 
 const formatRole = (role) => roleLabels[normalizeRoleValue(role)] || normalizeRoleValue(role) || '—';
+const getSpecialityValue = (user) => {
+  if (!user || typeof user !== 'object') {
+    return '—';
+  }
+
+  const candidates = [
+    user.specialite,
+    user.professeur?.specialite,
+    user.teacher?.specialite,
+    user.profile?.specialite,
+    user.profil?.specialite,
+    user.user?.specialite,
+    user.data?.specialite,
+    user.content?.specialite,
+  ];
+
+  const found = candidates.find((value) => value !== undefined && value !== null && String(value).trim() !== '');
+  return found !== undefined ? String(found) : '—';
+};
 
 const formatDate = (value) => {
   if (!value) {
@@ -151,7 +170,7 @@ const UsersPage = () => {
       telephoneParent: user.telephoneParent || '',
       emailParent: user.emailParent || '',
       classeId: user.classeId ?? '',
-      specialite: user.specialite || '',
+      specialite: getSpecialityValue(user) === '—' ? '' : getSpecialityValue(user),
     });
     setErrorMessage('');
     setSuccessMessage('');
@@ -282,7 +301,13 @@ const UsersPage = () => {
         ? await getStudentById(user.id)
         : await getUserById(user.id);
 
-      setSelectedUser(data || user);
+      const mergedUser = {
+        ...user,
+        ...(data && typeof data === 'object' ? data : {}),
+        ...(data?.data && typeof data.data === 'object' ? data.data : {}),
+      };
+
+      setSelectedUser(mergedUser);
     } catch (error) {
       console.error('Failed to load user details:', error);
       setSelectedUser(user);
@@ -322,7 +347,6 @@ const UsersPage = () => {
   });
 
   const columns = [
-    { key: 'id', label: 'ID' },
     {
       key: 'nom',
       label: 'Nom complet',
@@ -683,7 +707,7 @@ const UsersPage = () => {
                   {normalizedSelectedRole === 'PROFESSEUR' && (
                     <div className="col-md-12">
                       <label className="form-label">Spécialité</label>
-                      <div className="form-control bg-light border-0">{selectedUser.specialite || '—'}</div>
+                      <div className="form-control bg-light border-0">{getSpecialityValue(selectedUser)}</div>
                     </div>
                   )}
                 </div>
