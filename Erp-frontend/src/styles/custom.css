@@ -1030,6 +1030,147 @@ select {
   background: rgba(79, 70, 229, 0.025);
 }
 
+.payments-table {
+  min-width: 760px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+.absences-table {
+  min-width: 760px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+.payments-table thead th {
+  padding: 1.05rem 1.15rem;
+  color: #123b66;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  /*background: linear-gradient(120deg, #123b66, #146c94);*/
+  border: 0;
+  white-space: nowrap;
+  border-bottom: 2px solid rgba(20, 60, 102, 0.18);
+  text-transform: uppercase;
+  
+}
+
+.payments-table thead th:first-child {
+  border-top-left-radius: 0.85rem;
+}
+
+.payments-table thead th:last-child {
+  border-top-right-radius: 0.85rem;
+}
+
+.absences-table thead th {
+  padding: 1.05rem 1.15rem;
+  color: #123b66;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  border: 0;
+  border-bottom: 2px solid rgba(20, 60, 102, 0.18);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.absences-table thead th:first-child {
+  border-top-left-radius: 0.85rem;
+}
+
+.absences-table thead th:last-child {
+  border-top-right-radius: 0.85rem;
+}
+
+.payments-table tbody tr {
+  background: rgba(255, 255, 255, 0.88);
+  transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.payments-table tbody tr:hover {
+  position: relative;
+  z-index: 1;
+  background: #f0f9ff;
+  box-shadow: 0 8px 24px rgba(14, 116, 144, 0.1);
+  transform: translateY(-1px);
+}
+
+.absences-table tbody tr {
+  background: rgba(255, 255, 255, 0.88);
+  transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.absences-table tbody tr:hover {
+  position: relative;
+  z-index: 1;
+  background: #f0f9ff;
+  box-shadow: 0 8px 24px rgba(14, 116, 144, 0.1);
+  transform: translateY(-1px);
+}
+
+.payments-table tbody td {
+  padding: 1.05rem 1.15rem;
+  color: #334155;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  white-space: nowrap;
+}
+
+.absences-table tbody td {
+  padding: 1.05rem 1.15rem;
+  color: #334155;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  white-space: nowrap;
+}
+
+.payments-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.absences-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.payments-table tbody td:first-child {
+  color: #123b66;
+  font-weight: 800;
+}
+
+.absences-table tbody td:first-child {
+  color: #123b66;
+  font-weight: 800;
+}
+
+.payments-table tbody td:nth-child(3) {
+  color: #0f766e;
+  font-weight: 800;
+}
+
+.payments-table tbody td:nth-child(6) {
+  color: #166534;
+  font-weight: 750;
+}
+
+@media (max-width: 767.98px) {
+  .payments-table {
+    min-width: 680px;
+  }
+
+  .absences-table {
+    min-width: 680px;
+  }
+
+  .payments-table thead th,
+  .payments-table tbody td,
+  .absences-table thead th,
+  .absences-table tbody td {
+    padding: 0.85rem 0.9rem;
+  }
+}
+
 .notes-table {
   min-width: 1120px;
   border-collapse: separate;

@@ -115,6 +115,8 @@ const NAV_GROUPS_BY_ROLE = {
       label: 'Général',
       items: [
         { to: '/', label: 'Tableau de bord', icon: 'bi-grid-1x2-fill' },
+        { to: '/my-payments', label: 'Mes paiements', icon: 'bi-credit-card-2-front-fill' },
+        { to: '/my-absences', label: 'Mes absences', icon: 'bi-calendar-x-fill' },
       ],
     },
     {

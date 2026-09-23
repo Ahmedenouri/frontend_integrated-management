@@ -20,6 +20,7 @@ import {
   getMesAbsences,
   getMesClasses,
   getMesEtudiants,
+  getMoyenneGenerale,
   getMesNotes,
   getMesSeances,
 } from '../api/erpApi';
@@ -70,11 +71,18 @@ const toArray = (value, keys = []) => {
   if (value && typeof value === 'object' && [
     'id',
     'date',
+    'dateAbsence',
     'dateSeance',
     'heureDebut',
     'matiere',
     'classe',
     'libelle',
+    'motif',
+    'justifiee',
+    'justifie',
+    'nombreHeures',
+    'etudiantId',
+    'totalAbsencesAuMoment',
   ].some((key) => value[key] !== undefined)) {
     return [value];
   }
@@ -271,19 +279,31 @@ const Dashboard = () => {
             toArray(ownSchedule, ['data', 'content', 'sessions', 'seances', 'items'])
           ));
         } else if (normalizedRole === 'ROLE_ETUDIANT') {
-          const [{ data: absences }, { data: schedule }, { data: classes }, { data: matieres }, { data: notes }] = await Promise.all([
+          const studentId = userProfile?.etudiantId ?? userProfile?.studentId ?? userProfile?.id;
+          const [absencesResult, scheduleResult, classesResult, subjectsResult, notesResult, averageResult] = await Promise.allSettled([
             getMesAbsences(),
             getMesSeances(),
             getAllClasses(),
             getAllMatieres(),
             getMesNotes(),
+            studentId ? getMoyenneGenerale(studentId) : Promise.reject(new Error('Student id is unavailable.')),
           ]);
 
-          setAbsenceRows(Array.isArray(absences) ? absences : []);
-          setTimeTableRows(Array.isArray(schedule) ? schedule : []);
-          setClassRows(Array.isArray(classes) ? classes : []);
-          setSubjectRows(Array.isArray(matieres) ? matieres : []);
-          setNoteRows(Array.isArray(notes) ? notes : []);
+          const absences = absencesResult.status === 'fulfilled' ? absencesResult.value.data : [];
+          const schedule = scheduleResult.status === 'fulfilled' ? scheduleResult.value.data : [];
+          const classes = classesResult.status === 'fulfilled' ? classesResult.value.data : [];
+          const matieres = subjectsResult.status === 'fulfilled' ? subjectsResult.value.data : [];
+          const notes = notesResult.status === 'fulfilled' ? notesResult.value.data : [];
+          const average = averageResult.status === 'fulfilled' ? averageResult.value.data : null;
+
+          if (average !== null && average !== undefined && average !== '') {
+            setDashboard((current) => ({ ...current, moyenneGenerale: Number(average) }));
+          }
+          setAbsenceRows(toArray(absences, ['data', 'content', 'absences', 'items']));
+          setTimeTableRows(toArray(schedule, ['data', 'content', 'sessions', 'seances', 'items']));
+          setClassRows(toArray(classes, ['data', 'content', 'classes', 'items']));
+          setSubjectRows(toArray(matieres, ['data', 'content', 'matieres', 'subjects', 'items']));
+          setNoteRows(toArray(notes, ['data', 'content', 'notes', 'items']));
         }
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
@@ -311,9 +331,11 @@ const Dashboard = () => {
 
     const validNotes = noteRows.filter((note) => !Number.isNaN(getNoteValue(note)) && getNoteValue(note) >= 0);
     const totalNotes = validNotes.length;
-    const moyenneGenerale = totalNotes
+    const moyenneCalculee = totalNotes
       ? validNotes.reduce((sum, note) => sum + getNoteValue(note), 0) / totalNotes
       : 0;
+    const moyenneApi = Number(dashboard.moyenneGenerale);
+    const moyenneGenerale = Number.isFinite(moyenneApi) && moyenneApi >= 0 ? moyenneApi : moyenneCalculee;
 
     const moyennesParMatiere = new Map();
     const noteSummary = validNotes.map((note) => {
@@ -347,7 +369,7 @@ const Dashboard = () => {
       studentClass: userProfile?.classe?.nom || userProfile?.classeNom || userProfile?.classeName || classRows.find((item) => String(item.id) === String(userProfile?.classeId || userProfile?.classe))?.nom || '—',
       totalAbsences: absenceRows.length,
     };
-  }, [absenceRows.length, classRows, noteRows, role, subjectRows, userProfile]);
+  }, [absenceRows.length, classRows, dashboard.moyenneGenerale, noteRows, role, subjectRows, userProfile]);
 
   const getStudentClassLabel = (student, classes = []) => {
     const rawClasse = student?.classe;
@@ -422,12 +444,17 @@ const Dashboard = () => {
     }
 
     return [
-      { label: 'Moyenne générale', value: '—', icon: 'bi-graph-up-arrow', tone: 'positive' },
-      { label: 'Moyennes par matière', value: subjectRows.length, icon: 'bi-book-half', tone: 'primary' },
+      {
+        label: 'Moyenne générale',
+        value: studentDashboardData?.totalNotes ? `${studentDashboardData.average.toFixed(2)} / 20` : '—',
+        icon: 'bi-graph-up-arrow',
+        tone: 'positive',
+      },
+      { label: 'Moyennes par matière', value: studentDashboardData?.subjectAverages.length ?? 0, icon: 'bi-book-half', tone: 'primary' },
       { label: 'Absences', value: absenceRows.length, icon: 'bi-calendar-x-fill', tone: 'danger' },
       { label: 'Emploi du temps', value: timeTableRows.length, icon: 'bi-calendar3', tone: 'warning' },
     ];
-  }, [absenceRows.length, classAssignments.length, dashboard, role, paymentRows.length, studentAssignments.length, studentRows.length, subjectRows.length, teacherRows.length, timeTableRows.length]);
+  }, [absenceRows.length, classAssignments.length, dashboard, role, paymentRows.length, studentAssignments.length, studentDashboardData, studentRows.length, subjectRows.length, teacherRows.length, timeTableRows.length]);
 
   const handlePaymentSubmit = async (event) => {
     event.preventDefault();
@@ -599,8 +626,10 @@ const Dashboard = () => {
               </div>
               <div className="dashboard-overview-item">
                 <span className="dashboard-overview-label">Moyenne générale</span>
-                <strong>{dashboard.moyenneEtablissement ?? '—'}</strong>
-                <small>Performance globale de l’établissement</small>
+                <strong>{role === 'ROLE_ETUDIANT'
+                  ? (studentDashboardData?.totalNotes ? `${studentDashboardData.average.toFixed(2)} / 20` : '—')
+                  : (dashboard.moyenneEtablissement ?? '—')}</strong>
+                <small>{role === 'ROLE_ETUDIANT' ? 'Votre moyenne calculée à partir des notes' : 'Performance globale de l’établissement'}</small>
               </div>
               <div className="dashboard-overview-item">
                 <span className="dashboard-overview-label">Paiements en attente</span>
@@ -825,41 +854,6 @@ const Dashboard = () => {
                 <label className="form-label text-muted">Classe</label>
                 <div className="form-control bg-light border-0">{studentDashboardData.studentClass}</div>
               </div>
-            </div>
-          </div>
-
-          <div className="app-card rounded-card p-3">
-            <div className="card-header">
-              <h3>Absences cumulées</h3>
-              <button type="button" className="btn btn-link text-primary px-0" onClick={downloadBulletin}>Télécharger le bulletin PDF</button>
-            </div>
-            <div className="table-responsive">
-              <table className="table align-middle">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Motif</th>
-                    <th>Justifiée</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {absenceRows.length ? absenceRows.map((absence) => (
-                    <tr key={absence.id ?? `${absence.date}-${absence.motif}`}>
-                      <td>{formatDate(absence.date || absence.dateAbsence)}</td>
-                      <td>{absence.motif || '—'}</td>
-                      <td>
-                        <span className={`badge-soft ${absence.justifiee ? 'success' : 'danger'}`}>
-                          {absence.justifiee ? 'Oui' : 'Non'}
-                        </span>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan="3" className="text-center text-muted">Aucune absence enregistrée.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
             </div>
           </div>
         </section>

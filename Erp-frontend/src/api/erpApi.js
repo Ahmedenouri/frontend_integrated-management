@@ -97,6 +97,8 @@ export const getAllSurveillants = () => axiosClient.get('/api-surveillant/getAll
 
 export const getAllPaiements = () => axiosClient.get('/api-paiement/getAllPaiements');
 
+export const getMesPaiements = () => axiosClient.get('/api-paiement/mes-paiements');
+
 export const getAllFinancialManagers = () => axiosClient.get('/api-responsable-financier/getAllResponsablesFinanciers');
 
 export const createFinancialManager = (payload) => axiosClient.post('/api-responsable-financier/add-ResponsableFinancier', payload);
@@ -198,6 +200,8 @@ export const downloadBulletinPdf = (etudiantId) => axiosClient.get(`/api-bulleti
 });
 
 export const getMesNotes = () => axiosClient.get('/api-note/mes-notes');
+
+export const getMoyenneGenerale = (etudiantId) => axiosClient.get(`/api-note/moyenne-generale/${etudiantId}`);
 
 export const getMesClasses = () => axiosClient.get('/api-professeur/mes-classes');
 

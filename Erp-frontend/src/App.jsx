@@ -23,6 +23,8 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 import SchedulePage from './pages/SchedulePage';
 import StudentsPage from './pages/StudentsPage';
+import StudentPaymentsPage from './pages/StudentPaymentsPage';
+import StudentAbsencesPage from './pages/StudentAbsencesPage';
 import SubjectsPage from './pages/SubjectsPage';
 import TeachersPage from './pages/TeachersPage';
 import Unauthorized from './pages/Unauthorized';
@@ -109,6 +111,22 @@ const AppLayout = () => {
               }
             />
             <Route
+              path="/my-payments"
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_ETUDIANT']}>
+                  <StudentPaymentsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-absences"
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_ETUDIANT']}>
+                  <StudentAbsencesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/financial-managers"
               element={
                 <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR']}>
@@ -161,6 +179,14 @@ const AppLayout = () => {
               element={
                 <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR', 'ROLE_SURVEILLANT', 'ROLE_PROFESSEUR']}>
                   <AttendancePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-payments"
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_ETUDIANT']}>
+                  <StudentPaymentsPage />
                 </ProtectedRoute>
               }
             />
