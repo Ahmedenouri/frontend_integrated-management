@@ -20,6 +20,7 @@ import {
   getMesAbsences,
   getMesClasses,
   getMesEtudiants,
+  getMesNotes,
   getMesSeances,
 } from '../api/erpApi';
 import { useAuth } from '../context/AuthContext';
@@ -153,6 +154,23 @@ const formatCurrency = (value) => {
   }).format(numericValue);
 };
 
+const getNoteValue = (note) => Number(note?.valeur ?? note?.value ?? note?.note ?? note?.noteValue ?? 0);
+const getEvaluationDisplayName = (evaluation) => evaluation?.titre || evaluation?.title || evaluation?.intitule || `Évaluation ${evaluation?.id || ''}`.trim() || 'Évaluation';
+const getSubjectFromNote = (note, subjectList = []) => {
+  const rawSubject = note?.matiere || note?.subject || note?.evaluation?.matiere || note?.evaluation?.subject || null;
+  if (rawSubject) {
+    return rawSubject;
+  }
+
+  const subjectId = note?.matiereId ?? note?.subjectId ?? note?.evaluation?.matiereId ?? note?.evaluation?.subjectId;
+  if (subjectId == null) {
+    return null;
+  }
+
+  return subjectList.find((item) => String(item.id) === String(subjectId)) || null;
+};
+const getSubjectDisplayName = (subject) => subject?.intitule || subject?.nom || subject?.name || subject?.libelle || subject?.designation || 'Matière';
+
 const Dashboard = () => {
   const { userRole, userProfile } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -164,6 +182,7 @@ const Dashboard = () => {
   const [classRows, setClassRows] = useState([]);
   const [subjectRows, setSubjectRows] = useState([]);
   const [timeTableRows, setTimeTableRows] = useState([]);
+  const [noteRows, setNoteRows] = useState([]);
   const [classAssignments, setClassAssignments] = useState([]);
   const [studentAssignments, setStudentAssignments] = useState([]);
   const [scheduleClasses, setScheduleClasses] = useState([]);
@@ -252,17 +271,19 @@ const Dashboard = () => {
             toArray(ownSchedule, ['data', 'content', 'sessions', 'seances', 'items'])
           ));
         } else if (normalizedRole === 'ROLE_ETUDIANT') {
-          const [{ data: absences }, { data: schedule }, { data: classes }, { data: matieres }] = await Promise.all([
+          const [{ data: absences }, { data: schedule }, { data: classes }, { data: matieres }, { data: notes }] = await Promise.all([
             getMesAbsences(),
             getMesSeances(),
             getAllClasses(),
             getAllMatieres(),
+            getMesNotes(),
           ]);
 
           setAbsenceRows(Array.isArray(absences) ? absences : []);
           setTimeTableRows(Array.isArray(schedule) ? schedule : []);
           setClassRows(Array.isArray(classes) ? classes : []);
           setSubjectRows(Array.isArray(matieres) ? matieres : []);
+          setNoteRows(Array.isArray(notes) ? notes : []);
         }
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
@@ -282,6 +303,51 @@ const Dashboard = () => {
   }, [userProfile]);
 
   const role = userRole || 'ROLE_ETUDIANT';
+
+  const studentDashboardData = useMemo(() => {
+    if (role !== 'ROLE_ETUDIANT') {
+      return null;
+    }
+
+    const validNotes = noteRows.filter((note) => !Number.isNaN(getNoteValue(note)) && getNoteValue(note) >= 0);
+    const totalNotes = validNotes.length;
+    const moyenneGenerale = totalNotes
+      ? validNotes.reduce((sum, note) => sum + getNoteValue(note), 0) / totalNotes
+      : 0;
+
+    const moyennesParMatiere = new Map();
+    const noteSummary = validNotes.map((note) => {
+      const subject = getSubjectFromNote(note, subjectRows);
+      const evaluation = note?.evaluation || note?.evaluationObj || null;
+      const label = getSubjectDisplayName(subject) || note?.matiere || note?.subject || 'Matière';
+      const current = moyennesParMatiere.get(label) || { total: 0, count: 0 };
+      current.total += getNoteValue(note);
+      current.count += 1;
+      moyennesParMatiere.set(label, current);
+
+      return {
+        id: note.id || `${label}-${evaluation?.id || note?.evaluationId || note?.id || Math.random()}`,
+        subject: label,
+        evaluation: getEvaluationDisplayName(evaluation) || note?.evaluationTitre || note?.titre || 'Évaluation',
+        value: getNoteValue(note),
+        date: note?.dateSaisie || note?.date || evaluation?.dateEvaluation || '—',
+      };
+    });
+
+    return {
+      average: moyenneGenerale,
+      totalNotes,
+      subjectAverages: [...moyennesParMatiere.entries()].map(([label, current]) => ({
+        label,
+        value: current.count ? (current.total / current.count).toFixed(2) : '0.00',
+      })),
+      noteSummary,
+      studentName: [userProfile?.nom, userProfile?.prenom].filter(Boolean).join(' ') || userProfile?.name || 'Étudiant',
+      studentEmail: userProfile?.email || userProfile?.username || '—',
+      studentClass: userProfile?.classe?.nom || userProfile?.classeNom || userProfile?.classeName || classRows.find((item) => String(item.id) === String(userProfile?.classeId || userProfile?.classe))?.nom || '—',
+      totalAbsences: absenceRows.length,
+    };
+  }, [absenceRows.length, classRows, noteRows, role, subjectRows, userProfile]);
 
   const getStudentClassLabel = (student, classes = []) => {
     const rawClasse = student?.classe;
@@ -740,47 +806,26 @@ const Dashboard = () => {
         </section>
       )}
 
-      {role === 'ROLE_ETUDIANT' && (
+      {role === 'ROLE_ETUDIANT' && studentDashboardData && (
         <section className="card-grid">
-          <div className="app-card rounded-card table-card">
-            <div className="card-header">
-              <h3>Moyenne générale et moyennes par matière</h3>
-            </div>
-            <div className="table-responsive">
-              <table className="table align-middle">
-                <thead>
-                  <tr>
-                    <th>Matière</th>
-                    <th>Moyenne</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subjectRows.map((subject) => (
-                    <tr key={subject.id ?? subject.nom}>
-                      <td>{subject.nom || subject.intitule || '—'}</td>
-                      <td>{'—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
           <div className="app-card rounded-card p-3">
             <div className="card-header">
-              <h3>Emploi du temps personnel</h3>
+              <h3>Profil étudiant</h3>
             </div>
-            <ul className="activity-list list-unstyled">
-              {timeTableRows.map((session) => (
-                <li key={session.id ?? session.libelle} className="activity-item">
-                  <div>
-                    <strong>{session.libelle || session.matiere || 'Session'}</strong>
-                    <small>{session.date || session.horaire || '—'}</small>
-                  </div>
-                  <i className="bi bi-calendar3 text-primary" />
-                </li>
-              ))}
-            </ul>
+            <div className="row g-3">
+              <div className="col-md-4">
+                <label className="form-label text-muted">Nom complet</label>
+                <div className="form-control bg-light border-0">{studentDashboardData.studentName}</div>
+              </div>
+              <div className="col-md-4">
+                <label className="form-label text-muted">Email</label>
+                <div className="form-control bg-light border-0">{studentDashboardData.studentEmail}</div>
+              </div>
+              <div className="col-md-4">
+                <label className="form-label text-muted">Classe</label>
+                <div className="form-control bg-light border-0">{studentDashboardData.studentClass}</div>
+              </div>
+            </div>
           </div>
 
           <div className="app-card rounded-card p-3">
@@ -798,7 +843,7 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {absenceRows.map((absence) => (
+                  {absenceRows.length ? absenceRows.map((absence) => (
                     <tr key={absence.id ?? `${absence.date}-${absence.motif}`}>
                       <td>{formatDate(absence.date || absence.dateAbsence)}</td>
                       <td>{absence.motif || '—'}</td>
@@ -808,7 +853,11 @@ const Dashboard = () => {
                         </span>
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                      <td colSpan="3" className="text-center text-muted">Aucune absence enregistrée.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

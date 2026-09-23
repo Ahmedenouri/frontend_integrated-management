@@ -25,6 +25,22 @@ const normalizeClasses = (items) => items.map((item) => item.classe || item.clas
 const getClassLevel = (classItem) => classItem?.niveau || classItem?.level || classItem?.niveauEtude || '';
 const getStudentId = (student) => student?.id ?? student?.etudiantId ?? student?.studentId;
 const getEvaluationName = (evaluation) => evaluation?.titre || evaluation?.title || `Évaluation ${evaluation?.id}`;
+const getEvaluationType = (evaluation) => {
+  const rawValue = evaluation?.typeEval
+    ?? evaluation?.type
+    ?? evaluation?.typeEvaluation
+    ?? evaluation?.evaluationType
+    ?? evaluation?.nom
+    ?? evaluation?.name;
+
+  if (!rawValue) return '';
+
+  const normalized = String(rawValue).trim();
+  if (!normalized) return '';
+
+  return normalized.toUpperCase();
+};
+const getEvaluationDisplay = (evaluation) => getEvaluationName(evaluation) || getEvaluationType(evaluation) || 'Évaluation';
 const getSubjectName = (subject) => subject?.intitule || subject?.nom || subject?.name || `Matière ${subject?.id}`;
 const getCurrentUserId = (profile) => profile?.professeurId
   ?? profile?.professeur?.id
@@ -278,7 +294,11 @@ const NotesPage = ({ directorMode = false }) => {
     { key: 'matiere', label: 'Matière', render: (row) => getSubjectName(getNoteSubject(row)) },
     { key: 'valeur', label: 'Note', render: (row) => <span className="notes-score-badge">{getNoteValue(row) ?? '—'}/20</span> },
     { key: 'coefficient', label: 'Coefficient', render: (row) => <span className="notes-coefficient-badge">{getNoteCoefficient(row) ?? '—'}</span> },
-    { key: 'evaluation', label: 'Évaluation', render: (row) => row.evaluationTitre || row.evaluation?.titre || row.evaluation?.intitule || 'Évaluation' },
+    {
+      key: 'evaluation',
+      label: 'Évaluation',
+      render: (row) => getEvaluationDisplay(getNoteEvaluation(row)),
+    },
     { key: 'dateSaisie', label: 'Date', render: (row) => row.dateSaisie || row.date || 'Date non renseignée' },
     { key: 'appreciation', label: 'Appréciation', render: (row) => row.appreciation || '—' },
     {
