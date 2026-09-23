@@ -35,6 +35,17 @@ const initialStudentForm = {
   classeId: '',
 };
 
+const toArray = (value, keys = []) => {
+  if (Array.isArray(value)) return value;
+  if (!value || typeof value !== 'object') return [];
+
+  for (const key of keys) {
+    if (value[key] !== undefined) return toArray(value[key], keys);
+  }
+
+  return value.id !== undefined ? [value] : [];
+};
+
 const formatDate = (value) => {
   if (!value) {
     return '—';
@@ -75,7 +86,17 @@ const getStudentClassLabel = (student, classes = []) => {
     return rawClasse;
   }
 
-  return student?.classeNom || student?.classeName || student?.className || student?.classeId || '—';
+  const matchedClass = classes.find((item) => String(item.id) === String(student?.classeId));
+
+  return student?.classeNom
+    || student?.classeName
+    || student?.className
+    || matchedClass?.nom
+    || matchedClass?.name
+    || matchedClass?.libelle
+    || matchedClass?.label
+    || student?.classeId
+    || '—';
 };
 
 const getStudentClassId = (student) => {
@@ -197,17 +218,13 @@ const FinancePage = () => {
         getAllFinancialManagers().catch(() => ({ data: [] })),
       ]);
 
-      const studentMap = new Map(
-        Array.isArray(studentsData)
-          ? studentsData.map((student) => [student.id, student])
-          : []
-      );
+      const studentList = toArray(studentsData, ['data', 'content', 'students', 'etudiants', 'items']);
+      const classList = toArray(classesData, ['data', 'content', 'classes', 'items']);
+      const studentMap = new Map(studentList.map((student) => [String(student.id), student]));
 
-      const classList = Array.isArray(classesData) ? classesData : [];
-
-      const enrichedPaiements = Array.isArray(paiementsData)
-        ? paiementsData.map((paiement) => {
-            const student = studentMap.get(paiement.etudiantId);
+      const paymentList = toArray(paiementsData, ['data', 'content', 'paiements', 'payments', 'items']);
+      const enrichedPaiements = paymentList.map((paiement) => {
+            const student = studentMap.get(String(paiement.etudiantId));
 
             return {
               ...paiement,
@@ -218,11 +235,10 @@ const FinancePage = () => {
               classe: getStudentClassLabel(student, classList),
               dateCreation: student?.dateCreation || student?.createdAt || '—',
             };
-          })
-        : [];
+          });
 
       setStats(financeData || {});
-      setStudents(Array.isArray(studentsData) ? studentsData : []);
+      setStudents(studentList);
       setClasses(classList);
       setFinancialManagers(Array.isArray(financialManagersResult.data) ? financialManagersResult.data : []);
       setPaiements(enrichedPaiements);
@@ -627,9 +643,9 @@ const FinancePage = () => {
               </div>
 
               <div className="table-responsive">
-                <table className="table align-middle table-hover">
+                <table className="table align-middle table-hover payments-table finance-students-table">
                   <thead>
-                    <tr><th>Étudiant</th><th>Email</th><th>Classe</th><th>Niveau</th><th>Paiements</th><th>Montant payé</th><th>Situation</th></tr>
+                    <tr><th>Étudiant</th><th>Email</th><th>Classe</th><th>Niveau</th><th>Paiements</th><th>Montant payé</th><th>Situation</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
                     {studentFinanceRows.map((student) => {
@@ -648,10 +664,26 @@ const FinancePage = () => {
                               {student.status === 'PAYE' ? 'Payé' : student.status === 'IMPAYE' ? 'Impayé' : 'Non inscrit'}
                             </span>
                           </td>
+                          <td>
+                            {student.studentPayments.length ? (
+                              <div className="d-flex flex-wrap gap-2">
+                                {student.studentPayments.map((payment) => (
+                                  <button
+                                    className="btn btn-sm btn-outline-primary"
+                                    type="button"
+                                    key={payment.id}
+                                    onClick={() => openEditModal(payment)}
+                                  >
+                                    Modifier {payment.referencePaiement || `#${payment.id}`}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : '—'}
+                          </td>
                         </tr>
                       );
                     })}
-                    {!studentFinanceRows.length && <tr><td colSpan="7" className="text-muted text-center">Aucun étudiant trouvé.</td></tr>}
+                    {!studentFinanceRows.length && <tr><td colSpan="8" className="text-muted text-center">Aucun étudiant trouvé.</td></tr>}
                   </tbody>
                 </table>
               </div>

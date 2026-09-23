@@ -1044,6 +1044,20 @@ select {
   overflow: hidden;
 }
 
+.finance-students-table {
+  min-width: 1180px;
+}
+
+.finance-students-table tbody td:last-child {
+  min-width: 260px;
+  white-space: normal;
+}
+
+.finance-students-table tbody td:last-child .btn {
+  border-radius: 0.55rem;
+  font-weight: 700;
+}
+
 .payments-table thead th {
   padding: 1.05rem 1.15rem;
   color: #123b66;
@@ -1161,6 +1175,10 @@ select {
 
   .absences-table {
     min-width: 680px;
+  }
+
+  .finance-students-table {
+    min-width: 980px;
   }
 
   .payments-table thead th,
