@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { jsPDF } from 'jspdf';
 import {
   addBulletin,
   downloadBulletinPdf,
@@ -9,6 +10,7 @@ import {
   getAllNotes,
   getAllStudents,
   getAllTeachers,
+  getMesNotes,
 } from '../api/erpApi';
 import DataTable from '../components/DataTable';
 import { useAuth } from '../context/AuthContext';
@@ -29,7 +31,11 @@ const getClassName = (classItem) => classItem?.nom || classItem?.name || classIt
 const getStudentName = (student) => [student?.prenom, student?.nom].filter(Boolean).join(' ');
 const getNoteValue = (note) => note?.valeur ?? note?.value ?? note?.note ?? note?.noteValue;
 const getTeacherName = (teacher) => [teacher?.prenom, teacher?.nom].filter(Boolean).join(' ') || teacher?.name || teacher?.email || 'Professor';
-const getSubjectName = (subject) => subject?.intitule || subject?.nom || subject?.name || `Subject ${subject?.id}`;
+const getSubjectName = (subject) => {
+  if (typeof subject === 'string') return subject;
+  return subject?.intitule || subject?.nom || subject?.name || subject?.libelle || subject?.designation
+    || subject?.matiereNom || subject?.subjectName || (subject?.id ? `Matière ${subject.id}` : 'Matière non renseignée');
+};
 const getCurrentAcademicYear = () => {
   const year = new Date().getFullYear();
   return `${year}-${year + 1}`;
@@ -49,10 +55,25 @@ const BulletinsPage = () => {
   const [loading, setLoading] = useState(true);
   const { userRole, userProfile } = useAuth();
   const isDirector = userRole === 'ROLE_DIRECTEUR';
+  const isStudent = userRole === 'ROLE_ETUDIANT';
+  const currentStudentId = userProfile?.etudiantId ?? userProfile?.studentId ?? userProfile?.id;
+  const currentStudentName = [userProfile?.prenom, userProfile?.nom].filter(Boolean).join(' ') || userProfile?.name || 'Etudiant';
 
   useEffect(() => {
     const loadBulletins = async () => {
       try {
+        if (isStudent) {
+          const [notesResult, subjectsResult, evaluationsResult] = await Promise.all([
+            getMesNotes(),
+            getAllMatieres(),
+            getAllEvaluations(),
+          ]);
+          setNotes(toArray(notesResult.data, ['data', 'content', 'notes', 'items']));
+          setSubjects(toArray(subjectsResult.data, ['data', 'content', 'matieres', 'subjects', 'items']));
+          setEvaluations(toArray(evaluationsResult.data, ['data', 'content', 'evaluations', 'items']));
+          return;
+        }
+
         const [bulletinsResult, studentsResult, classesResult, notesResult, evaluationsResult, subjectsResult, teachersResult] = await Promise.all([
           getAllBulletins(),
           getAllStudents(),
@@ -117,7 +138,7 @@ const BulletinsPage = () => {
     };
 
     loadBulletins();
-  }, []);
+  }, [isStudent]);
 
   const filteredBulletins = bulletins.filter((bulletin) => (
     !selectedClassId || String(bulletin.classId) === String(selectedClassId)
@@ -132,8 +153,16 @@ const BulletinsPage = () => {
   const getNoteEvaluation = (note) => note.evaluation || evaluations.find((evaluation) => String(evaluation.id) === String(note.evaluationId)) || {};
   const getNoteSubject = (note) => {
     const evaluation = getNoteEvaluation(note);
-    const subjectId = note.matiereId ?? note.subjectId ?? evaluation.matiereId ?? evaluation.matiere?.id;
-    return note.matiere || note.subject || evaluation.matiere || subjects.find((subject) => String(subject.id) === String(subjectId));
+    const rawSubject = note.matiere || note.subject || evaluation.matiere || evaluation.subject;
+    const subjectId = note.matiereId ?? note.subjectId ?? evaluation.matiereId ?? evaluation.subjectId
+      ?? rawSubject?.id;
+    const subjectName = note.matiereNom || note.matiereName || note.subjectName || note.subjectNom
+      || evaluation.matiereNom || evaluation.matiereName || evaluation.subjectName;
+
+    if (typeof rawSubject === 'string') return { intitule: rawSubject, id: subjectId };
+    if (rawSubject) return rawSubject;
+    if (subjectName) return { intitule: subjectName, id: subjectId };
+    return subjects.find((subject) => String(subject.id) === String(subjectId));
   };
   const getNoteTeacher = (note) => {
     const teacherId = note.professeurId ?? note.teacherId ?? note.professeur?.id ?? note.teacher?.id;
@@ -161,6 +190,57 @@ const BulletinsPage = () => {
     });
 
     return totalCoefficient ? Number((weightedTotal / totalCoefficient).toFixed(2)) : 0;
+  };
+
+  const getNotesAverage = (studentNotes) => {
+    if (!studentNotes.length) return null;
+
+    let weightedTotal = 0;
+    let totalCoefficient = 0;
+    getGroupedSubjectNotes(studentNotes).forEach((group) => {
+      const subjectCoefficient = Number(group.subject?.coefficient ?? 1);
+      const coefficient = Number.isNaN(subjectCoefficient) ? 1 : subjectCoefficient;
+      const average = getSubjectAverage(group.notes);
+
+      if (average !== null) {
+        weightedTotal += average * coefficient;
+        totalCoefficient += coefficient;
+      }
+    });
+
+    return totalCoefficient ? Number((weightedTotal / totalCoefficient).toFixed(2)) : null;
+  };
+
+  const getSubjectAverage = (subjectNotes) => {
+    const values = subjectNotes
+      .map((note) => Number(getNoteValue(note)))
+      .filter((value) => !Number.isNaN(value));
+
+    if (!values.length) return null;
+    return Number((values.reduce((total, value) => total + value, 0) / values.length).toFixed(2));
+  };
+
+  const getAppreciation = (average) => {
+    if (average >= 16) return 'Très bien';
+    if (average >= 14) return 'Bien';
+    if (average >= 10) return 'Assez bien';
+    return 'Insuffisant';
+  };
+
+  const getGroupedSubjectNotes = (studentNotes) => {
+    const groups = new Map();
+
+    studentNotes.forEach((note) => {
+      const subject = getNoteSubject(note) || {};
+      const subjectName = getSubjectName(subject);
+      const subjectKey = String(subject.id ?? note.matiereId ?? note.subjectId ?? subjectName).toLowerCase();
+      const currentGroup = groups.get(subjectKey) || { subject, subjectName, notes: [] };
+      currentGroup.notes.push(note);
+      if (!currentGroup.subject?.id && subject.id) currentGroup.subject = subject;
+      groups.set(subjectKey, currentGroup);
+    });
+
+    return [...groups.values()];
   };
 
   const handleGenerateBulletin = async (bulletin) => {
@@ -196,6 +276,81 @@ const BulletinsPage = () => {
 
     setDownloadingId(bulletin.id);
     try {
+      if (isStudent) {
+        const document = new jsPDF();
+        const groupedSubjects = getGroupedSubjectNotes(notes);
+        const safeName = currentStudentName.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'etudiant';
+        const pageWidth = document.internal.pageSize.getWidth();
+        const tableX = 12;
+        const tableWidth = pageWidth - (tableX * 2);
+        const columnWidths = [72, 25, 25, tableWidth - 122];
+        const studentClass = userProfile?.classe?.nom || userProfile?.classeNom || userProfile?.classeName || '—';
+        const today = new Date().toLocaleDateString('fr-FR');
+        let y = 18;
+
+        document.setTextColor(0, 0, 255);
+        document.setFontSize(16);
+        document.setFont(undefined, 'bold');
+        document.text('ÉTABLISSEMENT SCOLAIRE - ERP', pageWidth / 2, y, { align: 'center' });
+        document.setTextColor(0, 0, 0);
+        document.setFontSize(12);
+        document.text('BULLETIN DE NOTES OFFICIEL', pageWidth / 2, y + 7, { align: 'center' });
+
+        document.setFontSize(9);
+        document.text(`Nom & Prénom: ${currentStudentName}`, 14, y + 21);
+        document.text(`Date d'édition: ${today}`, 148, y + 21);
+        document.text(`Classe: ${studentClass}`, 14, y + 29);
+        document.text(`ID Étudiant: ${currentStudentId || '—'}`, 148, y + 29);
+
+        y += 38;
+        const headerHeight = 8;
+        const rowHeight = 8;
+        const headers = ['Matière', 'Note / 20', 'Coeff.', 'Appréciation'];
+        document.setFillColor(190, 190, 190);
+        document.rect(tableX, y, tableWidth, headerHeight, 'FD');
+        document.setTextColor(0, 0, 0);
+        document.setFontSize(8);
+        document.setFont(undefined, 'bold');
+        let columnX = tableX;
+        headers.forEach((header, index) => {
+          document.text(header, columnX + (columnWidths[index] / 2), y + 5.5, { align: 'center' });
+          columnX += columnWidths[index];
+        });
+        y += headerHeight;
+        document.setFont(undefined, 'normal');
+
+        groupedSubjects.forEach((group) => {
+          if (y + rowHeight > 275) {
+            document.addPage();
+            y = 20;
+          }
+
+          const average = getSubjectAverage(group.notes);
+          const coefficient = group.subject?.coefficient ?? '—';
+          const values = [getSubjectName(group.subject), average === null ? '—' : average.toFixed(2), String(coefficient), average === null ? '—' : getAppreciation(average)];
+          columnX = tableX;
+          document.rect(tableX, y, tableWidth, rowHeight);
+          values.forEach((value, index) => {
+            document.rect(columnX, y, columnWidths[index], rowHeight);
+            document.text(String(value), columnX + (index === 0 ? 2 : columnWidths[index] / 2), y + 5.5, { align: index === 0 ? 'left' : 'center' });
+            columnX += columnWidths[index];
+          });
+          y += rowHeight;
+        });
+
+        const generalAverage = getNotesAverage(notes);
+        y += 14;
+        document.setTextColor(255, 0, 0);
+        document.setFontSize(12);
+        document.setFont(undefined, 'bold');
+        document.text(`MOYENNE GÉNÉRALE : ${generalAverage ?? '—'} / 20`, pageWidth - 14, y, { align: 'right' });
+        document.setTextColor(0, 0, 0);
+        document.setFontSize(9);
+        document.text('Cachet et Signature du Directeur :', pageWidth - 14, y + 17, { align: 'right' });
+        document.save(`bulletin-${safeName}.pdf`);
+        return;
+      }
+
       const response = await downloadBulletinPdf(bulletin.studentId);
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
@@ -268,32 +423,90 @@ const BulletinsPage = () => {
     },
   ];
 
+  const studentNoteColumns = [
+    {
+      key: 'subject',
+      label: 'Matière',
+      render: (group) => getSubjectName(group.subject),
+    },
+    {
+      key: 'evaluations',
+      label: 'Notes',
+      render: (group) => (
+        <div className="bulletin-notes-list">
+          {group.notes.map((note) => {
+            const evaluation = getNoteEvaluation(note);
+            return (
+              <div className="bulletin-note-item" key={note.id || `${group.subjectName}-${note.evaluationId}-${note.dateSaisie}`}>
+                <strong>{evaluation.titre || evaluation.type || 'Évaluation'}</strong>
+                <span className="bulletin-note-score">{getNoteValue(note) ?? '—'}/20</span>
+              </div>
+            );
+          })}
+        </div>
+      ),
+    },
+    {
+      key: 'average',
+      label: 'Moyenne',
+      render: (group) => `${getSubjectAverage(group.notes) ?? '—'}/20`,
+    },
+  ];
+
   return (
     <>
       <header className="page-header">
         <div className="page-title-row">
-          <h1>Bulletins</h1>
+          <h1>{isStudent ? 'Mes notes' : 'Bulletins'}</h1>
         </div>
-        <p className="page-subtitle">Official report cards available in the ERP.</p>
+        <p className="page-subtitle">
+          {isStudent ? 'Consultez uniquement vos notes.' : 'Official report cards available in the ERP.'}
+        </p>
       </header>
 
-      <div className="app-card rounded-card p-3 mb-4">
-        <label className="form-label" htmlFor="bulletin-class-filter">Filter by class</label>
-        <select
-          id="bulletin-class-filter"
-          className="form-select"
-          value={selectedClassId}
-          onChange={(event) => setSelectedClassId(event.target.value)}
-        >
-          <option value="">All classes</option>
-          {classes.map((classItem) => (
-            <option key={classItem.id} value={classItem.id}>{getClassName(classItem)}</option>
-          ))}
-        </select>
-      </div>
+      {!isStudent && (
+        <div className="app-card rounded-card p-3 mb-4">
+          <label className="form-label" htmlFor="bulletin-class-filter">Filter by class</label>
+          <select
+            id="bulletin-class-filter"
+            className="form-select"
+            value={selectedClassId}
+            onChange={(event) => setSelectedClassId(event.target.value)}
+          >
+            <option value="">All classes</option>
+            {classes.map((classItem) => (
+              <option key={classItem.id} value={classItem.id}>{getClassName(classItem)}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {loading ? (
         <div className="app-card rounded-card p-4 text-center">Loading bulletins...</div>
+      ) : isStudent ? (
+        <>
+          <DataTable columns={studentNoteColumns} rows={getGroupedSubjectNotes(notes)} emptyMessage="Aucune note disponible." />
+          <div className="app-card rounded-card p-4 mt-4 d-flex justify-content-between align-items-center gap-3">
+            <div>
+              <strong>Moyenne générale : </strong>
+              <span>{getNotesAverage(notes) ?? '—'}{getNotesAverage(notes) !== null ? '/20' : ''}</span>
+            </div>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => handleDownload({
+                id: currentStudentId,
+                studentId: currentStudentId,
+                studentName: currentStudentName,
+                anneeScolaire: getCurrentAcademicYear(),
+              })}
+              disabled={!currentStudentId || downloadingId === currentStudentId}
+            >
+              <i className={`bi ${downloadingId === currentStudentId ? 'bi-hourglass-split' : 'bi-file-earmark-pdf'}`} />
+              <span className="ms-2">{downloadingId === currentStudentId ? 'Téléchargement...' : 'Télécharger le bulletin complet'}</span>
+            </button>
+          </div>
+        </>
       ) : (
         <DataTable columns={columns} rows={filteredBulletins} emptyMessage="No bulletins found for this class." />
       )}

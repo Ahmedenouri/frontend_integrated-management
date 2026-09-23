@@ -127,7 +127,7 @@ const AppLayout = () => {
             <Route
               path="/subjects"
               element={
-                <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR', 'ROLE_SURVEILLANT', 'ROLE_PROFESSEUR', 'ROLE_ETUDIANT']}>
+                <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR', 'ROLE_SURVEILLANT', 'ROLE_PROFESSEUR']}>
                   <SubjectsPage />
                 </ProtectedRoute>
               }
@@ -143,7 +143,7 @@ const AppLayout = () => {
             <Route
               path="/evaluations"
               element={
-                <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR', 'ROLE_PROFESSEUR', 'ROLE_ETUDIANT']}>
+                <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR', 'ROLE_PROFESSEUR']}>
                   <EvaluationsPage />
                 </ProtectedRoute>
               }

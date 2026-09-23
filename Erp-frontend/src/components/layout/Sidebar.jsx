@@ -121,10 +121,8 @@ const NAV_GROUPS_BY_ROLE = {
       id: 'pedagogique',
       label: 'Pédagogique',
       items: [
-        { to: '/evaluations', label: 'Gestion des Évaluations & Examens', icon: 'bi-clipboard-check' },
         { to: '/bulletins', label: 'Gestion des Notes & Bulletins', icon: 'bi-file-earmark-text-fill' },
         { to: '/schedule', label: 'Gestion des Séances & Cours', icon: 'bi-journal-bookmark-fill' },
-        { to: '/subjects', label: 'Programmes & Matières', icon: 'bi-book-half' },
       ],
     },
   ],
