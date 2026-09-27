@@ -145,7 +145,7 @@ const AppLayout = () => {
             <Route
               path="/subjects"
               element={
-                <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR', 'ROLE_SURVEILLANT', 'ROLE_PROFESSEUR']}>
+                <ProtectedRoute allowedRoles={['ROLE_DIRECTEUR', 'ROLE_PROFESSEUR']}>
                   <SubjectsPage />
                 </ProtectedRoute>
               }

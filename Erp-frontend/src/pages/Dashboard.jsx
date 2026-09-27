@@ -178,6 +178,19 @@ const getSubjectFromNote = (note, subjectList = []) => {
   return subjectList.find((item) => String(item.id) === String(subjectId)) || null;
 };
 const getSubjectDisplayName = (subject) => subject?.intitule || subject?.nom || subject?.name || subject?.libelle || subject?.designation || 'Matière';
+const formatSanctionType = (type) => String(type || 'AUTRE')
+  .toLowerCase()
+  .split('_')
+  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+  .join(' ');
+const getStudentDisplayName = (absence, students = []) => {
+  const student = absence.etudiant || absence.student || students.find((item) => String(item.id) === String(absence.etudiantId ?? absence.studentId));
+  if (!student) {
+    return absence.etudiantNom || absence.studentName || '—';
+  }
+
+  return [student.nom, student.prenom].filter(Boolean).join(' ') || student.name || student.fullName || '—';
+};
 
 const Dashboard = () => {
   const { userRole, userProfile } = useAuth();
@@ -200,6 +213,8 @@ const Dashboard = () => {
   const [paymentForm, setPaymentForm] = useState(initialPaymentForm);
   const [receiptForm, setReceiptForm] = useState(initialReceiptForm);
   const [sanctionForm, setSanctionForm] = useState(initialSanctionForm);
+  const [sanctionLevel, setSanctionLevel] = useState('');
+  const [sanctionClassId, setSanctionClassId] = useState('');
 
   useEffect(() => {
     const loadData = async () => {
@@ -238,15 +253,17 @@ const Dashboard = () => {
           setStudentRows(Array.isArray(students) ? students : []);
           setClassRows(Array.isArray(classes) ? classes : []);
         } else if (normalizedRole === 'ROLE_SURVEILLANT') {
-          const [{ data: disciplineData }, { data: absences }, { data: students }] = await Promise.all([
+          const [{ data: disciplineData }, { data: absences }, { data: students }, { data: classes }] = await Promise.all([
             getDashboardDiscipline(),
             getAllAbsences(),
             getAllStudents(),
+            getAllClasses(),
           ]);
 
           setDashboard(disciplineData || {});
-          setAbsenceRows(Array.isArray(absences) ? absences : []);
-          setStudentRows(Array.isArray(students) ? students : []);
+          setAbsenceRows(toArray(absences, ['data', 'content', 'absences', 'items']));
+          setStudentRows(toArray(students, ['data', 'content', 'students', 'items']));
+          setClassRows(toArray(classes, ['data', 'content', 'classes', 'items']));
         } else if (normalizedRole === 'ROLE_PROFESSEUR') {
           const [classesResult, studentsResult, scheduleResult, timetableResult, ownScheduleResult, allClassesResult, subjectsResult, roomsResult] = await Promise.allSettled([
             getMesClasses(),
@@ -407,6 +424,17 @@ const Dashboard = () => {
     });
   }, [paymentRows, studentRows, classRows]);
 
+  const sanctionClasses = classRows;
+  const selectedSanctionClass = sanctionClasses.find((item) => String(item.id) === String(sanctionClassId));
+  const selectedClassLevel = selectedSanctionClass?.niveau || selectedSanctionClass?.level || selectedSanctionClass?.niveauEtude || '';
+  const sanctionLevels = selectedSanctionClass ? [selectedClassLevel].filter(Boolean) : [];
+  const sanctionStudents = studentRows.filter((student) => {
+    const studentClassId = student.classeId ?? student.classId ?? student.classe?.id ?? student.class?.id ?? student.classe;
+    const studentClass = sanctionClasses.find((item) => String(item.id) === String(studentClassId));
+    const studentLevel = studentClass?.niveau || studentClass?.level || studentClass?.niveauEtude || '';
+    return sanctionClassId && sanctionLevel && String(studentClassId) === String(sanctionClassId) && String(studentLevel) === String(sanctionLevel);
+  });
+
   const statCards = useMemo(() => {
     if (role === 'ROLE_DIRECTEUR') {
       return [
@@ -428,10 +456,19 @@ const Dashboard = () => {
 
     if (role === 'ROLE_SURVEILLANT') {
       return [
-        { label: 'Absences cumulées', value: dashboard.totalAbsences ?? absenceRows.length, icon: 'bi-calendar-x-fill', tone: 'danger' },
+        { label: 'Total étudiants', value: dashboard.totalEtudiants ?? 0, icon: 'bi-people-fill', tone: 'positive' },
+        { label: 'Total classes', value: dashboard.totalClasses ?? 0, icon: 'bi-mortarboard-fill', tone: 'primary' },
+        { label: 'Total matières', value: dashboard.totalMatieres ?? 0, icon: 'bi-book-half', tone: 'primary' },
+        { label: 'Moyenne établissement', value: dashboard.moyenneEtablissement ?? 0, icon: 'bi-graph-up-arrow', tone: 'positive' },
+        { label: 'Absences cumulées', value: dashboard.totalAbsences ?? 0, icon: 'bi-calendar-x-fill', tone: 'danger' },
         { label: 'Heures perdues', value: dashboard.totalHeuresAbsences ?? 0, icon: 'bi-clock-fill', tone: 'warning' },
-        { label: 'Sanctions', value: dashboard.totalSanctions ?? 0, icon: 'bi-shield-exclamation', tone: 'primary' },
-        { label: 'Étudiants', value: studentRows.length, icon: 'bi-people-fill', tone: 'positive' },
+        { label: 'Sanctions', value: dashboard.totalSanctions ?? 0, icon: 'bi-shield-exclamation', tone: 'danger' },
+        ...Object.entries(dashboard.sanctionsParType || {}).map(([type, count]) => ({
+          label: formatSanctionType(type),
+          value: count,
+          icon: 'bi-list-check',
+          tone: 'warning',
+        })),
       ];
     }
 
@@ -450,7 +487,6 @@ const Dashboard = () => {
         icon: 'bi-graph-up-arrow',
         tone: 'positive',
       },
-      { label: 'Moyennes par matière', value: studentDashboardData?.subjectAverages.length ?? 0, icon: 'bi-book-half', tone: 'primary' },
       { label: 'Absences', value: absenceRows.length, icon: 'bi-calendar-x-fill', tone: 'danger' },
       { label: 'Emploi du temps', value: timeTableRows.length, icon: 'bi-calendar3', tone: 'warning' },
     ];
@@ -499,6 +535,8 @@ const Dashboard = () => {
       });
       setMessage('Sanction saved successfully.');
       setSanctionForm(initialSanctionForm);
+      setSanctionLevel('');
+      setSanctionClassId('');
     } catch (error) {
       setMessage(error.response?.data?.message || 'Unable to create sanction.');
     }
@@ -534,9 +572,8 @@ const Dashboard = () => {
           <h1>
             {role === 'ROLE_DIRECTEUR' && 'Tableau de bord directeur'}
             {role === 'ROLE_RESPONSABLE_FINANCIER' && 'Tableau de bord financier'}
-            {role === 'ROLE_SURVEILLANT' && 'Tableau de bord de discipline'}
+            {role === 'ROLE_SURVEILLANT' && 'Tableau de bord surveillant'}
             {role === 'ROLE_PROFESSEUR' && 'Tableau de bord enseignant'}
-            {role === 'ROLE_ETUDIANT' && 'Tableau de bord étudiant'}
           </h1>
         </div>
         <p className="page-subtitle">Vue personnalisée du ERP ECOSCOL selon les permissions de votre rôle.</p>
@@ -707,22 +744,21 @@ const Dashboard = () => {
               <table className="table align-middle">
                 <thead>
                   <tr>
-                    <th>Étudiant</th>
-                    <th>Heures</th>
-                    <th>Alerte</th>
+                    <th>Nom et prénom</th>
+                    <th>Nombre heures</th>
+                    <th>Est justifiée</th>
                   </tr>
                 </thead>
                 <tbody>
                   {absenceRows.map((absence) => {
-                    const totalAbsences = Number(absence.totalAbsencesAuMoment ?? 0);
-                    const alertType = totalAbsences > 30 ? 'CONSEIL_DISCIPLINE' : totalAbsences > 20 ? 'CONVOCATION_PARENTS' : 'Normal';
+                    const totalAbsences = Number(absence.nombreHeures ?? absence.nombreHeuresAbsence ?? absence.totalHeures ?? absence.totalAbsencesAuMoment ?? 0);
                     return (
                       <tr key={absence.id ?? absence.etudiantId}>
-                        <td>{absence.etudiantId ?? '—'}</td>
+                        <td>{getStudentDisplayName(absence, studentRows)}</td>
                         <td>{totalAbsences}</td>
                         <td>
-                          <span className={`badge-soft ${alertType !== 'Normal' ? 'warning' : 'success'}`}>
-                            {alertType}
+                          <span className={`badge-soft ${absence.estJustifiee || absence.justifiee || absence.justifie ? 'success' : 'warning'}`}>
+                            {absence.estJustifiee || absence.justifiee || absence.justifie ? 'Oui' : 'Non'}
                           </span>
                         </td>
                       </tr>
@@ -740,8 +776,25 @@ const Dashboard = () => {
             <form onSubmit={handleSanctionSubmit}>
               <div className="row g-2">
                 <div className="col-md-4">
-                  <label className="form-label">ID étudiant</label>
-                  <input className="form-control" type="number" value={sanctionForm.etudiantId} onChange={(e) => setSanctionForm({ ...sanctionForm, etudiantId: e.target.value })} />
+                  <label className="form-label">Classe</label>
+                  <select className="form-select" value={sanctionClassId} onChange={(e) => { const classId = e.target.value; const classItem = sanctionClasses.find((item) => String(item.id) === String(classId)); setSanctionClassId(classId); setSanctionLevel(classItem?.niveau || classItem?.level || classItem?.niveauEtude || ''); setSanctionForm({ ...sanctionForm, etudiantId: '' }); }} required>
+                    <option value="">Choisir une classe</option>
+                    {sanctionClasses.map((classItem) => <option key={classItem.id} value={classItem.id}>{classItem.nom || classItem.name || `Classe ${classItem.id}`}</option>)}
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Niveau</label>
+                  <select className="form-select" value={sanctionLevel} onChange={(e) => { setSanctionLevel(e.target.value); setSanctionForm({ ...sanctionForm, etudiantId: '' }); }} disabled={!sanctionClassId} required>
+                    <option value="">Choisir un niveau</option>
+                    {sanctionLevels.map((level) => <option key={level} value={level}>{level}</option>)}
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Étudiant</label>
+                  <select className="form-select" value={sanctionForm.etudiantId} onChange={(e) => setSanctionForm({ ...sanctionForm, etudiantId: e.target.value })} disabled={!sanctionClassId} required>
+                    <option value="">Choisir un étudiant</option>
+                    {sanctionStudents.map((student) => <option key={student.id} value={student.id}>{[student.nom, student.prenom].filter(Boolean).join(' ') || student.name || `Étudiant ${student.id}`}</option>)}
+                  </select>
                 </div>
                 <div className="col-md-4">
                   <label className="form-label">Type</label>

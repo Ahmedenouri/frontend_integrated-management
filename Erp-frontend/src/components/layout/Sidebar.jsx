@@ -81,13 +81,6 @@ const NAV_GROUPS_BY_ROLE = {
         { to: '/attendance', label: 'Absences & Sanctions', icon: 'bi-calendar-check-fill' },
       ],
     },
-    {
-      id: 'pedagogique',
-      label: 'Pédagogique',
-      items: [
-        { to: '/subjects', label: 'Programmes & Matières', icon: 'bi-book-half' },
-      ],
-    },
   ],
   ROLE_PROFESSEUR: [
     {

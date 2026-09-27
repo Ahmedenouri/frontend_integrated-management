@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createStudent, deleteStudent, getAllClasses, getAllStudents, getMesClasses, getMesEtudiants, getStudentById, updateStudent } from '../api/erpApi';
 import DataTable from '../components/DataTable';
+import { useAuth } from '../context/AuthContext';
 import { useGlobalMessage } from '../utils/notifications';
 
 const initialForm = {
@@ -56,7 +57,11 @@ const normalizeClasses = (value) => toArray(value, ['data', 'content', 'classes'
 
 const StudentsPage = () => {
   const location = useLocation();
+  const { userRole } = useAuth();
   const isProfessorStudentsView = location.pathname === '/my-students';
+  const isDirector = userRole === 'ROLE_DIRECTEUR';
+  const isSupervisor = userRole === 'ROLE_SURVEILLANT';
+  const canEditStudents = !isProfessorStudentsView && (isDirector || isSupervisor);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -290,14 +295,14 @@ const StudentsPage = () => {
           <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openDetailsModal(row)}>
             Voir
           </button>
-          {!isProfessorStudentsView && (
+          {canEditStudents && (
             <>
               <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openEditModal(row)}>
                 Modifier
               </button>
-              <button className="btn btn-sm btn-outline-danger" type="button" onClick={() => openDeleteModal(row)}>
-                Supprimer
-              </button>
+              {isDirector && <button className="btn btn-sm btn-outline-danger" type="button" onClick={() => openDeleteModal(row)}>
+                  Supprimer
+                </button>}
             </>
           )}
         </div>
@@ -311,7 +316,7 @@ const StudentsPage = () => {
         <header className="page-header">
           <div className="page-title-row">
             <h1>Étudiants</h1>
-            {!isProfessorStudentsView && (
+            {isDirector && (
               <button className="btn btn-primary" type="button" onClick={openCreateModal}>
                 Ajouter un étudiant
               </button>

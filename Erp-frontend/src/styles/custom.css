@@ -992,6 +992,29 @@ select {
   color: var(--vpi-text);
 }
 
+.schedule-section-heading {
+  position: relative;
+  align-items: flex-start;
+  margin: 0 0 0.85rem;
+  padding: 0.95rem 1.15rem;
+  border: 1px solid rgba(20, 60, 102, 0.12);
+  border-radius: 0.85rem;
+  background: linear-gradient(135deg, rgba(240, 249, 255, 0.96), rgba(255, 255, 255, 0.98));
+  box-shadow: 0 8px 22px rgba(14, 116, 144, 0.06);
+}
+
+.schedule-section-heading h3 {
+  color: #123b66;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.schedule-section-heading p {
+  margin-top: 0.3rem;
+  color: var(--vpi-muted) !important;
+  font-size: 0.86rem;
+}
+
 .rounded-card {
   border-radius: var(--radius-lg);
 }
@@ -1037,6 +1060,99 @@ select {
   overflow: hidden;
 }
 
+.sessions-table {
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+.receipt-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.receipt-list-section {
+  margin-bottom: 1.5rem;
+}
+
+.receipt-list-heading h3 {
+  margin: 0;
+  color: var(--vpi-text);
+  font-size: 1.1rem;
+}
+
+.receipt-list-heading p {
+  margin: 0.3rem 0 0;
+  color: var(--vpi-muted);
+  font-size: 0.82rem;
+}
+
+.receipt-list-count {
+  flex-shrink: 0;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(29, 78, 216, 0.18);
+  border-radius: 999px;
+  background: rgba(29, 78, 216, 0.08);
+  color: var(--vpi-indigo);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.receipt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  min-width: 245px;
+}
+
+.receipt-action {
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.receipt-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+}
+
+.receipt-action-view {
+  border-color: #bae6fd;
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.receipt-action-receipt {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.receipt-action-edit {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.receipt-action-delete {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.receipt-action-download {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+}
+
 .absences-table {
   min-width: 760px;
   border-collapse: separate;
@@ -1079,6 +1195,25 @@ select {
   border-top-right-radius: 0.85rem;
 }
 
+.sessions-table thead th {
+  padding: 1.05rem 1.15rem;
+  color: #123b66;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  border: 0;
+  border-bottom: 2px solid rgba(20, 60, 102, 0.18);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sessions-table thead th:first-child {
+  border-top-left-radius: 0.85rem;
+}
+
+.sessions-table thead th:last-child {
+  border-top-right-radius: 0.85rem;
+}
+
 .absences-table thead th {
   padding: 1.05rem 1.15rem;
   color: #123b66;
@@ -1111,6 +1246,19 @@ select {
   transform: translateY(-1px);
 }
 
+.sessions-table tbody tr {
+  background: rgba(255, 255, 255, 0.88);
+  transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.sessions-table tbody tr:hover {
+  position: relative;
+  z-index: 1;
+  background: #f0f9ff;
+  box-shadow: 0 8px 24px rgba(14, 116, 144, 0.1);
+  transform: translateY(-1px);
+}
+
 .absences-table tbody tr {
   background: rgba(255, 255, 255, 0.88);
   transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
@@ -1132,6 +1280,14 @@ select {
   white-space: nowrap;
 }
 
+.sessions-table tbody td {
+  padding: 1.05rem 1.15rem;
+  color: #334155;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  white-space: nowrap;
+}
+
 .absences-table tbody td {
   padding: 1.05rem 1.15rem;
   color: #334155;
@@ -1142,6 +1298,15 @@ select {
 
 .payments-table tbody tr:last-child td {
   border-bottom: 0;
+}
+
+.sessions-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.sessions-table tbody td:first-child {
+  color: #123b66;
+  font-weight: 800;
 }
 
 .absences-table tbody tr:last-child td {
@@ -1169,6 +1334,11 @@ select {
 }
 
 @media (max-width: 767.98px) {
+  .receipt-list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .payments-table {
     min-width: 680px;
   }

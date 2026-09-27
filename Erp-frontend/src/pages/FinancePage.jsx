@@ -285,12 +285,6 @@ const FinancePage = () => {
     });
   }, [paiements, searchTerm]);
 
-  const paymentStatusCounts = useMemo(() => ({
-    enRetard: paiements.filter((paiement) => paiement.statut === 'EN_RETARD').length,
-    partiel: paiements.filter((paiement) => paiement.statut === 'PARTIEL').length,
-    enAttente: paiements.filter((paiement) => paiement.statut === 'EN_ATTENTE').length,
-  }), [paiements]);
-
   const selectedClass = classes.find((classItem) => String(classItem.id) === String(selectedClassId));
   const classStudents = students.filter((student) => String(getStudentClassId(student)) === String(selectedClassId));
   const levels = [...new Set(classStudents.map((student) => student.niveau || student.niveauEtude || selectedClass?.niveau).filter(Boolean))];
@@ -495,7 +489,6 @@ const FinancePage = () => {
   };
 
   const columns = [
-    { key: 'id', label: 'ID reçu' },
     { key: 'referencePaiement', label: 'Référence' },
     { key: 'nom', label: 'Nom' },
     { key: 'prenom', label: 'Prénom' },
@@ -530,20 +523,20 @@ const FinancePage = () => {
       key: 'actions',
       label: 'Actions',
       render: (row) => (
-        <div className="d-flex flex-wrap gap-2">
-          <button className="btn btn-sm btn-outline-info" type="button" onClick={() => openDetailsModal(row)}>
+        <div className="receipt-actions">
+          <button className="btn btn-sm receipt-action receipt-action-view" type="button" onClick={() => openDetailsModal(row)}>
             Voir
           </button>
-          <button className="btn btn-sm btn-outline-success" type="button" onClick={() => openReceiptModal(row)}>
+          <button className="btn btn-sm receipt-action receipt-action-receipt" type="button" onClick={() => openReceiptModal(row)}>
             Voir reçu
           </button>
-          <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openEditModal(row)}>
+          <button className="btn btn-sm receipt-action receipt-action-edit" type="button" onClick={() => openEditModal(row)}>
             Modifier
           </button>
-          <button className="btn btn-sm btn-outline-danger" type="button" onClick={() => openDeleteModal(row)}>
+          <button className="btn btn-sm receipt-action receipt-action-delete" type="button" onClick={() => openDeleteModal(row)}>
             Supprimer
           </button>
-          <button className="btn btn-sm btn-outline-secondary" type="button" onClick={() => downloadReceiptPdf(row)}>
+          <button className="btn btn-sm receipt-action receipt-action-download" type="button" onClick={() => downloadReceiptPdf(row)}>
             Télécharger reçu
           </button>
         </div>
@@ -567,28 +560,20 @@ const FinancePage = () => {
           <>
             <section className="stats-grid mb-4">
               <div className="app-card stat-card rounded-card">
+                <span className="stat-label">Total étudiants</span>
+                <span className="stat-value">{stats?.totalEtudiants ?? 0}</span>
+              </div>
+              <div className="app-card stat-card rounded-card">
+                <span className="stat-label">Total classes</span>
+                <span className="stat-value">{stats?.totalClasses ?? 0}</span>
+              </div>
+              <div className="app-card stat-card rounded-card">
                 <span className="stat-label">Total collecté</span>
                 <span className="stat-value">{stats?.totalEncaissementPercu ?? 0}</span>
               </div>
               <div className="app-card stat-card rounded-card">
                 <span className="stat-label">Montant impayé</span>
                 <span className="stat-value">{stats?.totalImpayes ?? 0}</span>
-              </div>
-              <div className="app-card stat-card rounded-card">
-                <span className="stat-label">Étudiants en retard</span>
-                <span className="stat-value">{stats?.nombreEtudiantsEnRetard ?? 0}</span>
-              </div>
-              <div className="app-card stat-card rounded-card">
-                <span className="stat-label">Paiements en retard</span>
-                <span className="stat-value">{paymentStatusCounts.enRetard}</span>
-              </div>
-              <div className="app-card stat-card rounded-card">
-                <span className="stat-label">Paiements partiels</span>
-                <span className="stat-value">{paymentStatusCounts.partiel}</span>
-              </div>
-              <div className="app-card stat-card rounded-card">
-                <span className="stat-label">Paiements en attente</span>
-                <span className="stat-value">{paymentStatusCounts.enAttente}</span>
               </div>
             </section>
 
@@ -645,7 +630,7 @@ const FinancePage = () => {
               <div className="table-responsive">
                 <table className="table align-middle table-hover payments-table finance-students-table">
                   <thead>
-                    <tr><th>Étudiant</th><th>Email</th><th>Classe</th><th>Niveau</th><th>Paiements</th><th>Montant payé</th><th>Situation</th><th>Actions</th></tr>
+                    <tr><th>Étudiant</th><th>Email</th><th>Classe</th><th>Niveau</th><th>Paiements</th><th>Type de paiement</th><th>Mode de paiement</th><th>Montant payé</th><th>Situation</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
                     {studentFinanceRows.map((student) => {
@@ -658,6 +643,16 @@ const FinancePage = () => {
                           <td>{getStudentClassLabel(student, classes)}</td>
                           <td>{studentLevel}</td>
                           <td>{student.studentPayments.length}</td>
+                          <td>
+                            {student.studentPayments.length ? student.studentPayments.map((payment) => (
+                              <div key={payment.id}>{payment.typePaiement || '—'}</div>
+                            )) : '—'}
+                          </td>
+                          <td>
+                            {student.studentPayments.length ? student.studentPayments.map((payment) => (
+                              <div key={payment.id}>{payment.mode || '—'}</div>
+                            )) : '—'}
+                          </td>
                           <td>{formatCurrency(amountPaid)}</td>
                           <td>
                             <span className={`badge-soft ${student.status === 'PAYE' ? 'success' : student.status === 'IMPAYE' ? 'danger' : 'warning'}`}>
@@ -683,7 +678,7 @@ const FinancePage = () => {
                         </tr>
                       );
                     })}
-                    {!studentFinanceRows.length && <tr><td colSpan="8" className="text-muted text-center">Aucun étudiant trouvé.</td></tr>}
+                    {!studentFinanceRows.length && <tr><td colSpan="10" className="text-muted text-center">Aucun étudiant trouvé.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -707,7 +702,16 @@ const FinancePage = () => {
               </div>
             </div>
 
-            <DataTable columns={columns} rows={filteredPaiements} emptyMessage="Aucun paiement trouvé." />
+            <section className="receipt-list-section">
+              <div className="receipt-list-heading">
+                <div>
+                  <h3>Liste des reçus de paiement</h3>
+                  <p>Consultez, modifiez ou téléchargez les reçus enregistrés.</p>
+                </div>
+                <span className="receipt-list-count">{filteredPaiements.length} reçu{filteredPaiements.length > 1 ? 's' : ''}</span>
+              </div>
+              <DataTable columns={columns} rows={filteredPaiements} emptyMessage="Aucun reçu trouvé." />
+            </section>
           </>
         )}
       </div>

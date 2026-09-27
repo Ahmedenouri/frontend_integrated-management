@@ -140,6 +140,7 @@ const SchedulePage = () => {
   const openCreateTimetable = () => {
     setEditingTimetableId(null);
     setTimetableForm(timetableFormInitial);
+    setIsSessionModalOpen(false);
     setIsTimetableModalOpen(true);
   };
 
@@ -209,11 +210,58 @@ const SchedulePage = () => {
     { key: 'estValide', label: 'Statut', render: (row) => <span className={`badge-soft ${row.estValide ? 'success' : 'warning'}`}>{row.estValide ? 'Validé' : 'Brouillon'}</span> },
     ...(canManage ? [{ key: 'actions', label: 'Actions', render: (row) => <div className="d-flex flex-column align-items-start gap-2"><button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openEditTimetable(row)}>Modifier</button><button className="btn btn-sm btn-outline-success" type="button" onClick={() => openCreateSession(row.id)}>Ajouter séance</button><button className="btn btn-sm btn-outline-danger" type="button" onClick={() => confirmDelete('timetable', row)}>Supprimer</button></div> }] : []),
   ];
+  const globalSessionColumns = [
+    { key: 'emploiDuTempsId', label: 'Classe', render: (row) => getSessionDetails(row).classe },
+    { key: 'jour', label: 'Jour' },
+    { key: 'heureDebut', label: 'Horaire', render: (row) => `${row.heureDebut || '—'} - ${row.heureFin || '—'}` },
+    { key: 'matiereId', label: 'Matière', render: (row) => getSessionDetails(row).matiere },
+    { key: 'professeurId', label: 'Professeur', render: (row) => findName(teachers, row.professeurId) },
+    { key: 'salleId', label: 'Salle', render: (row) => getSessionDetails(row).salle },
+  ];
 
   return <>
-    <header className="page-header"><div className="page-title-row"><h1>Emplois du temps</h1>{canManage && <button className="btn btn-primary" type="button" onClick={openCreateTimetable}>Créer un emploi du temps</button>}</div><p className="page-subtitle">Programmez les classes, semestres, jours, horaires, professeurs, matières et salles.</p></header>
+    <header className="page-header"><div className="page-title-row"><h1>Emplois du temps</h1>{canManage && <button className="btn btn-primary" type="button" onClick={() => openCreateTimetable()} aria-haspopup="dialog" aria-expanded={isTimetableModalOpen}>Créer un emploi du temps</button>}</div><p className="page-subtitle">Programmez les classes, semestres, jours, horaires, professeurs, matières et salles.</p></header>
     {loading ? <div className="app-card rounded-card p-4 text-center">Chargement des emplois du temps...</div> : <>
-      {canManage && <DataTable columns={timetableColumns} rows={timetables} emptyMessage="Aucun emploi du temps trouvé." />}
+      {canManage && <>
+        <DataTable columns={timetableColumns} rows={timetables} emptyMessage="Aucun emploi du temps trouvé." tableClassName="sessions-table timetable-table" />
+        {userRole === 'ROLE_SURVEILLANT' && <section className="mt-4">
+          <div className="card-header schedule-section-heading">
+            <div>
+              <h3>Séances programmées</h3>
+              <p className="text-muted mb-0">Vue globale des séances de toutes les classes et de tous les professeurs.</p>
+            </div>
+          </div>
+          <DataTable columns={globalSessionColumns} rows={sessions} emptyMessage="Aucune séance programmée." tableClassName="sessions-table" />
+          <div className="personal-schedule global-schedule mt-4" aria-label="Planning global hebdomadaire">
+            <div className="personal-schedule-heading">
+              <div>
+                <span className="eyebrow">Vue graphique</span>
+                <h2>Planning global de la semaine</h2>
+              </div>
+              <span className="personal-schedule-count">{displayedSessions.length} séance{displayedSessions.length === 1 ? '' : 's'}</span>
+            </div>
+            <div className="personal-schedule-grid">
+              {days.map((day) => (
+                <div className="personal-schedule-day" key={day}>
+                  <h3>{day}</h3>
+                  {sessionsByDay[day].length ? sessionsByDay[day].map((session) => {
+                    const details = getSessionDetails(session);
+                    return (
+                      <article className="personal-schedule-session" key={session.id}>
+                        <strong>{session.heureDebut || '—'} - {session.heureFin || '—'}</strong>
+                        <span>{details.matiere}</span>
+                        <small>{details.classe}</small>
+                        <small>Professeur : {findName(teachers, session.professeurId)}</small>
+                        <small>{details.salle}</small>
+                      </article>
+                    );
+                  }) : <p className="personal-schedule-empty">Aucune séance</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>}
+      </>}
       {!canManage && <section className="personal-schedule mt-4" aria-label="Mon planning hebdomadaire">
         <div className="personal-schedule-heading"><div><span className="eyebrow">Mon planning</span><h2>Mes séances de la semaine</h2></div><span className="personal-schedule-count">{displayedSessions.length} séance{displayedSessions.length === 1 ? '' : 's'}</span></div>
         <div className="personal-schedule-grid">
