@@ -15,6 +15,7 @@ import {
   updateAbsence,
 } from '../api/erpApi';
 import DataTable from '../components/DataTable';
+import { useAuth } from '../context/AuthContext';
 import { useGlobalMessage } from '../utils/notifications';
 
 const initialForm = {
@@ -53,6 +54,8 @@ const formatSession = (session) => {
 const getStudentLevel = (student, classItem) => student?.niveau || student?.niveauEtude || classItem?.niveau || '';
 
 const AttendancePage = () => {
+  const { hasRole } = useAuth();
+  const canDeleteSanctions = !hasRole(['ROLE_SURVEILLANT']);
   const [stats, setStats] = useState(null);
   const [absences, setAbsences] = useState([]);
   const [classes, setClasses] = useState([]);
@@ -605,10 +608,12 @@ const AttendancePage = () => {
                                     <i className="bi bi-pencil-square me-1" />
                                     Mise à jour
                                   </button>
-                                  <button className="btn btn-sm btn-outline-danger" type="button" onClick={() => openDeleteSanction(sanction)}>
-                                    <i className="bi bi-trash3 me-1" />
-                                    Supprimer
-                                  </button>
+                                  {canDeleteSanctions && (
+                                    <button className="btn btn-sm btn-outline-danger" type="button" onClick={() => openDeleteSanction(sanction)}>
+                                      <i className="bi bi-trash3 me-1" />
+                                      Supprimer
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             </tr>

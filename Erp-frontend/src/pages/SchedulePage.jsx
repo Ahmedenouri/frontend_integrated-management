@@ -156,11 +156,31 @@ const SchedulePage = () => {
     setIsSessionModalOpen(true);
   };
 
+  const openEditSession = (session) => {
+    setEditingSessionId(session.id);
+    setSessionForm({
+      jour: session.jour || 'LUNDI',
+      heureDebut: session.heureDebut || '',
+      heureFin: session.heureFin || '',
+      emploiDuTempsId: String(session.emploiDuTempsId || ''),
+      professeurId: String(session.professeurId || ''),
+      salleId: String(session.salleId || ''),
+      matiereId: String(session.matiereId || ''),
+    });
+    setIsSessionModalOpen(true);
+  };
+
   const handleTimetableSubmit = async (event) => {
     event.preventDefault();
     setSaving(true);
     try {
-      const payload = { classeId: Number(timetableForm.classeId), semestre: Number(timetableForm.semestre), estValide: timetableForm.estValide, ...(timetableForm.surveillantId ? { surveillantId: Number(timetableForm.surveillantId) } : {}) };
+      const existingTimetable = timetables.find((item) => String(item.id) === String(editingTimetableId));
+      const payload = {
+        classeId: Number(timetableForm.classeId),
+        semestre: Number(timetableForm.semestre),
+        estValide: userRole === 'ROLE_DIRECTEUR' ? Boolean(timetableForm.estValide) : Boolean(existingTimetable?.estValide),
+        ...(timetableForm.surveillantId ? { surveillantId: Number(timetableForm.surveillantId) } : {}),
+      };
       if (!payload.classeId) throw new Error('La classe est obligatoire.');
       if (editingTimetableId) await updateEmploiDuTemps(editingTimetableId, payload);
       else await createEmploiDuTemps(payload);
@@ -206,7 +226,7 @@ const SchedulePage = () => {
   const timetableColumns = [
     { key: 'classeId', label: 'Classe', render: (row) => findName(classes, row.classeId) },
     { key: 'semestre', label: 'Semestre', render: (row) => `Semestre ${row.semestre}` },
-    { key: 'surveillantId', label: 'Surveillant', render: (row) => findName(supervisors, row.surveillantId) },
+    ...(userRole !== 'ROLE_SURVEILLANT' ? [{ key: 'surveillantId', label: 'Surveillant', render: (row) => findName(supervisors, row.surveillantId) }] : []),
     { key: 'estValide', label: 'Statut', render: (row) => <span className={`badge-soft ${row.estValide ? 'success' : 'warning'}`}>{row.estValide ? 'Validé' : 'Brouillon'}</span> },
     ...(canManage ? [{ key: 'actions', label: 'Actions', render: (row) => <div className="d-flex flex-column align-items-start gap-2"><button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openEditTimetable(row)}>Modifier</button><button className="btn btn-sm btn-outline-success" type="button" onClick={() => openCreateSession(row.id)}>Ajouter séance</button><button className="btn btn-sm btn-outline-danger" type="button" onClick={() => confirmDelete('timetable', row)}>Supprimer</button></div> }] : []),
   ];
@@ -217,6 +237,7 @@ const SchedulePage = () => {
     { key: 'matiereId', label: 'Matière', render: (row) => getSessionDetails(row).matiere },
     { key: 'professeurId', label: 'Professeur', render: (row) => findName(teachers, row.professeurId) },
     { key: 'salleId', label: 'Salle', render: (row) => getSessionDetails(row).salle },
+    { key: 'actions', label: 'Actions', render: (row) => <div className="d-flex gap-2"><button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openEditSession(row)}>Modifier</button><button className="btn btn-sm btn-outline-danger" type="button" onClick={() => confirmDelete('session', row)}>Supprimer</button></div> },
   ];
 
   return <>
@@ -224,7 +245,7 @@ const SchedulePage = () => {
     {loading ? <div className="app-card rounded-card p-4 text-center">Chargement des emplois du temps...</div> : <>
       {canManage && <>
         <DataTable columns={timetableColumns} rows={timetables} emptyMessage="Aucun emploi du temps trouvé." tableClassName="sessions-table timetable-table" />
-        {userRole === 'ROLE_SURVEILLANT' && <section className="mt-4">
+        <section className="mt-4">
           <div className="card-header schedule-section-heading">
             <div>
               <h3>Séances programmées</h3>
@@ -260,7 +281,7 @@ const SchedulePage = () => {
               ))}
             </div>
           </div>
-        </section>}
+        </section>
       </>}
       {!canManage && <section className="personal-schedule mt-4" aria-label="Mon planning hebdomadaire">
         <div className="personal-schedule-heading"><div><span className="eyebrow">Mon planning</span><h2>Mes séances de la semaine</h2></div><span className="personal-schedule-count">{displayedSessions.length} séance{displayedSessions.length === 1 ? '' : 's'}</span></div>
@@ -270,7 +291,7 @@ const SchedulePage = () => {
       </section>}
     </>}
 
-    {isTimetableModalOpen && <div className="student-modal-backdrop" onClick={() => setIsTimetableModalOpen(false)}><div className="student-modal confirm-modal" onClick={(event) => event.stopPropagation()}><div className="student-modal-header"><h3>{editingTimetableId ? 'Modifier l’emploi du temps' : 'Créer un emploi du temps'}</h3><button className="btn-close" type="button" onClick={() => setIsTimetableModalOpen(false)} aria-label="Fermer" /></div><div className="student-modal-body"><form onSubmit={handleTimetableSubmit}><div className="row g-3"><div className="col-md-6"><label className="form-label">Classe</label><select className="form-select" value={timetableForm.classeId} onChange={(event) => setTimetableForm({ ...timetableForm, classeId: event.target.value })} required><option value="">Choisir une classe</option>{classes.map((item) => <option key={item.id} value={item.id}>{item.nom || `Classe ${item.id}`}</option>)}</select></div><div className="col-md-6"><label className="form-label">Semestre</label><select className="form-select" value={timetableForm.semestre} onChange={(event) => setTimetableForm({ ...timetableForm, semestre: event.target.value })}><option value="1">Semestre 1</option><option value="2">Semestre 2</option></select></div><div className="col-md-12"><label className="form-label">Surveillant responsable</label><select className="form-select" value={timetableForm.surveillantId} onChange={(event) => setTimetableForm({ ...timetableForm, surveillantId: event.target.value })}><option value="">Choisir un surveillant</option>{supervisors.map((item) => <option key={item.id} value={item.id}>{fullName(item)}</option>)}</select></div><div className="col-12"><div className="form-check"><input className="form-check-input" type="checkbox" checked={timetableForm.estValide} onChange={(event) => setTimetableForm({ ...timetableForm, estValide: event.target.checked })} id="scheduleValidated" /><label className="form-check-label" htmlFor="scheduleValidated">Emploi du temps validé</label></div></div></div><div className="student-modal-actions"><button className="btn btn-outline-secondary" type="button" onClick={() => setIsTimetableModalOpen(false)}>Annuler</button><button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Enregistrement...' : 'Enregistrer'}</button></div></form></div></div></div>}
+    {isTimetableModalOpen && <div className="student-modal-backdrop" onClick={() => setIsTimetableModalOpen(false)}><div className="student-modal confirm-modal" onClick={(event) => event.stopPropagation()}><div className="student-modal-header"><h3>{editingTimetableId ? 'Modifier l’emploi du temps' : 'Créer un emploi du temps'}</h3><button className="btn-close" type="button" onClick={() => setIsTimetableModalOpen(false)} aria-label="Fermer" /></div><div className="student-modal-body"><form onSubmit={handleTimetableSubmit}><div className="row g-3"><div className="col-md-6"><label className="form-label">Classe</label><select className="form-select" value={timetableForm.classeId} onChange={(event) => setTimetableForm({ ...timetableForm, classeId: event.target.value })} required><option value="">Choisir une classe</option>{classes.map((item) => <option key={item.id} value={item.id}>{item.nom || `Classe ${item.id}`}</option>)}</select></div><div className="col-md-6"><label className="form-label">Semestre</label><select className="form-select" value={timetableForm.semestre} onChange={(event) => setTimetableForm({ ...timetableForm, semestre: event.target.value })}><option value="1">Semestre 1</option><option value="2">Semestre 2</option></select></div><div className="col-md-12"><label className="form-label">Surveillant responsable</label><select className="form-select" value={timetableForm.surveillantId} onChange={(event) => setTimetableForm({ ...timetableForm, surveillantId: event.target.value })}><option value="">Choisir un surveillant</option>{supervisors.map((item) => <option key={item.id} value={item.id}>{fullName(item)}</option>)}</select></div>{userRole === 'ROLE_DIRECTEUR' && <div className="col-12"><div className="form-check"><input className="form-check-input" type="checkbox" checked={timetableForm.estValide} onChange={(event) => setTimetableForm({ ...timetableForm, estValide: event.target.checked })} id="scheduleValidated" /><label className="form-check-label" htmlFor="scheduleValidated">Emploi du temps validé</label></div></div>}</div><div className="student-modal-actions"><button className="btn btn-outline-secondary" type="button" onClick={() => setIsTimetableModalOpen(false)}>Annuler</button><button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Enregistrement...' : 'Enregistrer'}</button></div></form></div></div></div>}
 
     {isSessionModalOpen && <div className="student-modal-backdrop" onClick={() => setIsSessionModalOpen(false)}><div className="student-modal confirm-modal" onClick={(event) => event.stopPropagation()}><div className="student-modal-header"><h3>{editingSessionId ? 'Modifier la séance' : 'Programmer une séance'}</h3><button className="btn-close" type="button" onClick={() => setIsSessionModalOpen(false)} aria-label="Fermer" /></div><div className="student-modal-body"><form onSubmit={handleSessionSubmit}><div className="row g-3"><div className="col-md-6"><label className="form-label">Emploi du temps</label><select className="form-select" value={sessionForm.emploiDuTempsId} onChange={(event) => setSessionForm({ ...sessionForm, emploiDuTempsId: event.target.value })} required><option value="">Choisir un emploi</option>{timetables.map((item) => <option key={item.id} value={item.id}>{findName(classes, item.classeId)} • Semestre {item.semestre}</option>)}</select></div><div className="col-md-6"><label className="form-label">Jour</label><select className="form-select" value={sessionForm.jour} onChange={(event) => setSessionForm({ ...sessionForm, jour: event.target.value })}>{days.map((day) => <option key={day} value={day}>{day}</option>)}</select></div><div className="col-md-6"><label className="form-label">Heure début</label><input className="form-control" type="time" value={sessionForm.heureDebut} onChange={(event) => setSessionForm({ ...sessionForm, heureDebut: event.target.value })} required /></div><div className="col-md-6"><label className="form-label">Heure fin</label><input className="form-control" type="time" value={sessionForm.heureFin} onChange={(event) => setSessionForm({ ...sessionForm, heureFin: event.target.value })} required /></div><div className="col-md-4"><label className="form-label">Professeur</label><select className="form-select" value={sessionForm.professeurId} onChange={(event) => setSessionForm({ ...sessionForm, professeurId: event.target.value })}><option value="">Choisir</option>{teachers.map((item) => <option key={item.id} value={item.id}>{fullName(item)}</option>)}</select></div><div className="col-md-4"><label className="form-label">Matière</label><select className="form-select" value={sessionForm.matiereId} onChange={(event) => setSessionForm({ ...sessionForm, matiereId: event.target.value })}><option value="">Choisir</option>{subjects.map((item) => <option key={item.id} value={item.id}>{getSubjectLabel(item)}</option>)}</select></div><div className="col-md-4"><label className="form-label">Salle</label><select className="form-select" value={sessionForm.salleId} onChange={(event) => setSessionForm({ ...sessionForm, salleId: event.target.value })}><option value="">Choisir</option>{rooms.map((item) => <option key={item.id} value={item.id}>{item.codeSalle || `Salle ${item.id}`}</option>)}</select></div></div><div className="student-modal-actions"><button className="btn btn-outline-secondary" type="button" onClick={() => setIsSessionModalOpen(false)}>Annuler</button><button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Enregistrement...' : 'Enregistrer la séance'}</button></div></form></div></div></div>}
 
